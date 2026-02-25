@@ -1,0 +1,29 @@
+{
+  "name": "ayush-healthcare",
+  "version": "1.0.0",
+  "description": "Ayush 24/7 Health Care - Multi-dashboard healthcare platform",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "vite"
+  },
+  "keywords": [
+    "healthcare",
+    "medical",
+    "dashboard",
+    "appointments"
+  ],
+  "author": "Ayush Health Care",
+  "license": "MIT",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.21.3"
+  }
+}

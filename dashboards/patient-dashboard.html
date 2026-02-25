@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard - Ayush 24/7 Health Care</title>
+    <link rel="stylesheet" href="../css/style.css?v=2">
+    <link rel="stylesheet" href="../css/patient-dashboard.css?v=2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>Ayush 24/7</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="active" onclick="showDashboardSection('overview')">
+                        <i class="fas fa-th-large"></i>
+                        <span>Dashboard</span>
+                    </li>
+                    <li onclick="showDashboardSection('appointments')">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>My Appointments</span>
+                    </li>
+                    <li onclick="showDashboardSection('book')">
+                        <i class="fas fa-calendar-plus"></i>
+                        <span>Book Appointment</span>
+                    </li>
+                    <li onclick="showDashboardSection('prescriptions')">
+                        <i class="fas fa-file-prescription"></i>
+                        <span>My Prescriptions</span>
+                    </li>
+                    <li onclick="showDashboardSection('medicines')">
+                        <i class="fas fa-pills"></i>
+                        <span>Buy Medicines</span>
+                    </li>
+                    <li onclick="showDashboardSection('orders')">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span>My Orders</span>
+                    </li>
+                    <li onclick="showDashboardSection('records')">
+                        <i class="fas fa-folder-open"></i>
+                        <span>Medical Records</span>
+                    </li>
+                    <li onclick="showDashboardSection('labtests')">
+                        <i class="fas fa-flask"></i>
+                        <span>Lab Tests</span>
+                    </li>
+                    <li onclick="showDashboardSection('profile')">
+                        <i class="fas fa-user"></i>
+                        <span>My Profile</span>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <button class="menu-toggle" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>Patient Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">2</span>
+                    </div>
+                    <div class="user-profile" onclick="showSection('profile')" style="cursor: pointer;" title="View Profile">
+                        <img src="https://randomuser.me/api/portraits/men/11.jpg" alt="Patient" id="headerProfileImg">
+                        <div class="user-info">
+                            <span class="user-name" id="patientName">Patient</span>
+                            <span class="user-role">Patient</span>
+                        </div>
+                        <i class="fas fa-chevron-down" style="margin-left: 8px; font-size: 12px; color: #666;"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Overview Section -->
+                <section id="overview-section" class="dashboard-section active">
+                    <div class="section-header">
+                        <h2>Welcome, <span id="welcomeName">Patient</span>!</h2>
+                        <p>Manage your health from one place.</p>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <div class="quick-action-card" onclick="showDashboardSection('book')">
+                            <i class="fas fa-calendar-plus"></i>
+                            <h4>Book Appointment</h4>
+                            <p>Consult with top doctors</p>
+                        </div>
+                        <div class="quick-action-card" onclick="showDashboardSection('medicines')">
+                            <i class="fas fa-pills"></i>
+                            <h4>Buy Medicines</h4>
+                            <p>Order medicines online</p>
+                        </div>
+                        <div class="quick-action-card" onclick="showDashboardSection('labtests')">
+                            <i class="fas fa-flask"></i>
+                            <h4>Book Lab Test</h4>
+                            <p>Home sample collection</p>
+                        </div>
+                        <div class="quick-action-card" onclick="showDashboardSection('records')">
+                            <i class="fas fa-folder-open"></i>
+                            <h4>Medical Records</h4>
+                            <p>View your health history</p>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon appointments">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="upcomingAppointments">2</h3>
+                                <p>Upcoming Appointments</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon prescriptions">
+                                <i class="fas fa-file-prescription"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="activePrescriptions">5</h3>
+                                <p>Active Prescriptions</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon orders">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="pendingOrders">1</h3>
+                                <p>Pending Orders</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon lab-tests">
+                                <i class="fas fa-flask"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="labReports">8</h3>
+                                <p>Lab Reports</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Role Info -->
+                    <div class="role-info-section">
+                        <h3>What You Can Do</h3>
+                        <div class="role-cards">
+                            <div class="role-info-card patient">
+                                <div class="role-icon">
+                                    <i class="fas fa-calendar-check"></i>
+                                </div>
+                                <h4>Book Appointments</h4>
+                                <p>Schedule consultations with specialists, choose between online or hospital visits.</p>
+                            </div>
+                            <div class="role-info-card patient">
+                                <div class="role-icon">
+                                    <i class="fas fa-notes-medical"></i>
+                                </div>
+                                <h4>Access Medical Records</h4>
+                                <p>View your complete health history, prescriptions, and lab reports.</p>
+                            </div>
+                            <div class="role-info-card patient">
+                                <div class="role-icon">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <h4>Virtual Consultations</h4>
+                                <p>Receive medical consultations via secure video calls from home.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Appointments -->
+                    <div class="recent-activity">
+                        <h3>Upcoming Appointments</h3>
+                        <div class="appointments-list" id="upcomingAppointmentsList">
+                            <!-- Appointments will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- My Appointments Section -->
+                <section id="appointments-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>My Appointments</h2>
+                        <button class="add-btn" onclick="showDashboardSection('book')">
+                            <i class="fas fa-plus"></i> Book New
+                        </button>
+                    </div>
+
+                    <div class="filter-bar">
+                        <select id="appointmentFilter" onchange="filterAppointments(this.value)">
+                            <option value="all">All Appointments</option>
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+
+                    <!-- Appointment Cards View -->
+                    <div id="appointmentCardsContainer" class="appointment-cards-grid">
+                        <!-- Appointments will be populated by JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Book Appointment Section -->
+                <section id="book-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Book an Appointment</h2>
+                    </div>
+
+                    <div class="specialists-grid">
+                        <div class="specialist-card" onclick="selectSpecialty('General Physician')">
+                            <i class="fas fa-stethoscope"></i>
+                            <span>General Physician</span>
+                        </div>
+                        <div class="specialist-card" onclick="selectSpecialty('Cardiology')">
+                            <i class="fas fa-heartbeat"></i>
+                            <span>Cardiology</span>
+                        </div>
+                        <div class="specialist-card" onclick="selectSpecialty('Neurology')">
+                            <i class="fas fa-brain"></i>
+                            <span>Neurology</span>
+                        </div>
+                        <div class="specialist-card" onclick="selectSpecialty('Pediatrics')">
+                            <i class="fas fa-baby"></i>
+                            <span>Pediatrics</span>
+                        </div>
+                        <div class="specialist-card" onclick="selectSpecialty('Dermatology')">
+                            <i class="fas fa-allergies"></i>
+                            <span>Dermatology</span>
+                        </div>
+                        <div class="specialist-card" onclick="selectSpecialty('Orthopedics')">
+                            <i class="fas fa-bone"></i>
+                            <span>Orthopedics</span>
+                        </div>
+                    </div>
+
+                    <div id="doctorsList" style="display: none;">
+                        <button class="back-btn-dash" onclick="backToSpecialties()">
+                            <i class="fas fa-arrow-left"></i> Back to Specialties
+                        </button>
+                        <h3 id="specialtyTitle">Doctors</h3>
+                        <div class="doctors-list-patient" id="doctorsListPatient">
+                            <!-- Doctors will be populated -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Prescriptions Section -->
+                <section id="prescriptions-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>My Prescriptions</h2>
+                    </div>
+
+                    <div class="prescriptions-list" id="patientPrescriptionsList">
+                        <!-- Prescriptions will be populated by JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Buy Medicines Section -->
+                <section id="medicines-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Buy Medicines</h2>
+                    </div>
+
+                    <div class="medicine-categories-patient">
+                        <div class="medicine-cat-card" onclick="showMedicineCategory('Pain Relief')">
+                            <i class="fas fa-hand-holding-medical"></i>
+                            <span>Pain Relief</span>
+                        </div>
+                        <div class="medicine-cat-card" onclick="showMedicineCategory('Cold & Flu')">
+                            <i class="fas fa-head-side-cough"></i>
+                            <span>Cold & Flu</span>
+                        </div>
+                        <div class="medicine-cat-card" onclick="showMedicineCategory('Vitamins')">
+                            <i class="fas fa-capsules"></i>
+                            <span>Vitamins</span>
+                        </div>
+                        <div class="medicine-cat-card" onclick="showMedicineCategory('Diabetes')">
+                            <i class="fas fa-syringe"></i>
+                            <span>Diabetes Care</span>
+                        </div>
+                    </div>
+
+                    <div id="medicinesList" style="display: none;">
+                        <button class="back-btn-dash" onclick="backToMedicineCategories()">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <h3 id="medicineCategoryTitle">Medicines</h3>
+                        <div class="medicines-grid-patient" id="medicinesGridPatient">
+                            <!-- Medicines will be populated -->
+                        </div>
+                    </div>
+
+                    <!-- Cart -->
+                    <div class="cart-dashboard" id="cartDashboard" style="display: none;">
+                        <h3><i class="fas fa-shopping-cart"></i> Your Cart</h3>
+                        <div id="cartItemsList"></div>
+                        <div class="cart-total-dash">
+                            <span>Total:</span>
+                            <span id="cartTotalDash">₹0</span>
+                        </div>
+                        <button class="submit-btn" onclick="placeOrder()">Place Order</button>
+                    </div>
+                </section>
+
+                <!-- Orders Section -->
+                <section id="orders-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>My Orders</h2>
+                    </div>
+
+                    <div class="orders-track" id="ordersTrackList">
+                        <!-- Orders will be populated by JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Medical Records Section -->
+                <section id="records-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Medical Records</h2>
+                    </div>
+
+                    <div class="records-tabs">
+                        <button class="tab-btn active" onclick="showRecordsTab('all')">All</button>
+                        <button class="tab-btn" onclick="showRecordsTab('prescriptions')">Prescriptions</button>
+                        <button class="tab-btn" onclick="showRecordsTab('lab')">Lab Reports</button>
+                        <button class="tab-btn" onclick="showRecordsTab('diagnosis')">Diagnosis</button>
+                    </div>
+
+                    <div class="patient-records-section" id="patientRecords">
+                        <!-- Records will be populated -->
+                    </div>
+                </section>
+
+                <!-- Lab Tests Section -->
+                <section id="labtests-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Lab Tests</h2>
+                    </div>
+
+                    <div class="lab-test-categories">
+                        <div class="lab-cat-card" onclick="bookLabTest('Diabetes')">
+                            <i class="fas fa-tint"></i>
+                            <h4>Diabetes</h4>
+                            <p>Blood sugar tests</p>
+                        </div>
+                        <div class="lab-cat-card" onclick="bookLabTest('Heart')">
+                            <i class="fas fa-heart"></i>
+                            <h4>Heart Health</h4>
+                            <p>Cardiac profile</p>
+                        </div>
+                        <div class="lab-cat-card" onclick="bookLabTest('Thyroid')">
+                            <i class="fas fa-disease"></i>
+                            <h4>Thyroid</h4>
+                            <p>Thyroid function</p>
+                        </div>
+                        <div class="lab-cat-card" onclick="bookLabTest('Full Body')">
+                            <i class="fas fa-body"></i>
+                            <h4>Full Body</h4>
+                            <p>Complete checkup</p>
+                        </div>
+                    </div>
+
+                    <div class="booked-tests">
+                        <h3>My Booked Tests</h3>
+                        <div id="bookedTestsList">
+                            <!-- Booked tests will be populated -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Profile Section -->
+                <section id="profile-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>My Profile</h2>
+                    </div>
+
+                    <div class="profile-container-patient">
+                        <div class="profile-card-patient">
+                            <div class="profile-image">
+                                <img src="https://randomuser.me/api/portraits/men/11.jpg" alt="Patient" id="profileImage">
+                                <button class="edit-photo-btn" onclick="changeProfilePhoto()"><i class="fas fa-camera"></i></button>
+                            </div>
+                            <h3 id="profileName">Patient Name</h3>
+                            <p id="profileEmail">patient@email.com</p>
+                            <p id="profileRole" style="color: #4CAF50; font-weight: 500;"><i class="fas fa-user-check"></i> Verified Patient</p>
+                        </div>
+
+                        <div class="profile-details-patient">
+                            <form id="patientProfileForm" onsubmit="updateProfile(event)">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Full Name</label>
+                                        <input type="text" id="profileFullName" value="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Email</label>
+                                        <input type="email" id="profileEmailInput" value="">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Phone</label>
+                                        <input type="tel" id="profilePhone" value="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Date of Birth</label>
+                                        <input type="date" id="profileDOB">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Blood Group</label>
+                                        <select id="profileBloodGroup">
+                                            <option value="">Select</option>
+                                            <option value="A+">A+</option>
+                                            <option value="A-">A-</option>
+                                            <option value="B+">B+</option>
+                                            <option value="B-">B-</option>
+                                            <option value="AB+">AB+</option>
+                                            <option value="AB-">AB-</option>
+                                            <option value="O+">O+</option>
+                                            <option value="O-">O-</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Gender</label>
+                                        <select id="profileGender">
+                                            <option value="">Select</option>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Address</label>
+                                    <textarea id="profileAddress" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="submit-btn">Update Profile</button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Appointment Booking Modal -->
+    <div id="bookingModal" class="booking-modal" style="display: none;">
+        <div class="booking-modal-content">
+            <div class="booking-modal-header">
+                <h2><i class="fas fa-calendar-plus"></i> Book Appointment</h2>
+                <button class="close-modal" onclick="closeBookingModal()">&times;</button>
+            </div>
+            <div class="booking-modal-body">
+                <div class="doctor-info-card">
+                    <img id="modalDoctorImg" src="" alt="Doctor">
+                    <div>
+                        <h3 id="modalDoctorName">Dr. Name</h3>
+                        <p id="modalDoctorSpecialty">Specialty</p>
+                        <p class="modal-fee"><i class="fas fa-rupee-sign"></i> <span id="modalDoctorFee">500</span> per consultation</p>
+                    </div>
+                </div>
+                
+                <form id="appointmentForm" onsubmit="confirmBooking(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Patient Name</label>
+                            <input type="text" id="bookingPatientName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-envelope"></i> Email</label>
+                            <input type="email" id="bookingPatientEmail" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-phone"></i> Phone Number</label>
+                            <input type="tel" id="bookingPatientPhone" required placeholder="Enter your phone number">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-tint"></i> Blood Group</label>
+                            <select id="bookingBloodGroup">
+                                <option value="">Select Blood Group</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-alt"></i> Appointment Date *</label>
+                            <input type="date" id="bookingDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-clock"></i> Time Slot *</label>
+                            <select id="bookingTime" required>
+                                <option value="">Select Time Slot</option>
+                                <option value="09:00 AM">09:00 AM</option>
+                                <option value="10:00 AM">10:00 AM</option>
+                                <option value="11:00 AM">11:00 AM</option>
+                                <option value="12:00 PM">12:00 PM</option>
+                                <option value="02:00 PM">02:00 PM</option>
+                                <option value="03:00 PM">03:00 PM</option>
+                                <option value="04:00 PM">04:00 PM</option>
+                                <option value="05:00 PM">05:00 PM</option>
+                                <option value="06:00 PM">06:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-hospital"></i> Consultation Type *</label>
+                        <div class="consultation-type-options">
+                            <label class="type-option">
+                                <input type="radio" name="consultationType" value="Online" checked>
+                                <span class="type-card online">
+                                    <i class="fas fa-video"></i>
+                                    <strong>Online Consultation</strong>
+                                    <small>Video call from home</small>
+                                </span>
+                            </label>
+                            <label class="type-option">
+                                <input type="radio" name="consultationType" value="Hospital">
+                                <span class="type-card hospital">
+                                    <i class="fas fa-hospital-alt"></i>
+                                    <strong>Hospital Visit</strong>
+                                    <small>In-person consultation</small>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="fas fa-notes-medical"></i> Reason for Visit</label>
+                        <textarea id="bookingReason" rows="3" placeholder="Describe your symptoms or reason for consultation..."></textarea>
+                    </div>
+                    
+                    <div class="booking-summary">
+                        <h4><i class="fas fa-receipt"></i> Booking Summary</h4>
+                        <div class="summary-row">
+                            <span>Consultation Fee:</span>
+                            <span id="summaryFee">₹500</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Platform Fee:</span>
+                            <span>₹0 <small>(Free)</small></span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total Amount:</span>
+                            <span id="summaryTotal">₹500</span>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="cancel-btn" onclick="closeBookingModal()">Cancel</button>
+                        <button type="submit" class="confirm-btn"><i class="fas fa-check-circle"></i> Confirm Booking</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Success Modal -->
+    <div id="successModal" class="booking-modal" style="display: none;">
+        <div class="success-modal-content">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>Appointment Booked Successfully!</h2>
+            <div class="success-details" id="successDetails"></div>
+            <button class="success-btn" onclick="closeSuccessModal()">Done</button>
+        </div>
+    </div>
+
+    <!-- Appointment Details Modal -->
+    <div id="appointmentDetailsModal" class="booking-modal" style="display: none;">
+        <div class="appointment-details-content">
+            <div class="details-modal-header">
+                <h2><i class="fas fa-calendar-check"></i> Appointment Details</h2>
+                <button class="close-modal" onclick="closeAppointmentDetails()">&times;</button>
+            </div>
+            <div class="details-modal-body" id="appointmentDetailsBody">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/patient-dashboard.js?v=4"></script>
+</body>
+</html>

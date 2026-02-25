@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacist Dashboard - Ayush 24/7 Health Care</title>
+    <link rel="stylesheet" href="../css/pharmacist-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>Ayush 24/7</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="active" onclick="showDashboardSection('overview')">
+                        <i class="fas fa-th-large"></i>
+                        <span>Dashboard</span>
+                    </li>
+                    <li onclick="showDashboardSection('prescriptions')">
+                        <i class="fas fa-file-prescription"></i>
+                        <span>E-Prescriptions</span>
+                    </li>
+                    <li onclick="showDashboardSection('orders')">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Medicine Orders</span>
+                    </li>
+                    <li onclick="showDashboardSection('inventory')">
+                        <i class="fas fa-warehouse"></i>
+                        <span>Inventory</span>
+                    </li>
+                    <li onclick="showDashboardSection('dispensed')">
+                        <i class="fas fa-check-double"></i>
+                        <span>Dispensed</span>
+                    </li>
+                    <li onclick="showDashboardSection('medicines')">
+                        <i class="fas fa-pills"></i>
+                        <span>Medicine Info</span>
+                    </li>
+                    <li onclick="showDashboardSection('profile')">
+                        <i class="fas fa-user"></i>
+                        <span>My Profile</span>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <button class="menu-toggle" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1>Pharmacist Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">5</span>
+                    </div>
+                    <div class="user-profile">
+                        <img src="https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg" alt="Pharmacist">
+                        <div class="user-info">
+                            <span class="user-name" id="pharmacistName">Pharmacist</span>
+                            <span class="user-role">Pharmacist</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Overview Section -->
+                <section id="overview-section" class="dashboard-section active">
+                    <div class="section-header">
+                        <h2>Welcome, <span id="welcomeName">Pharmacist</span>!</h2>
+                        <p>Manage prescriptions and medicine orders efficiently.</p>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon prescriptions">
+                                <i class="fas fa-file-prescription"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="pendingPrescriptions">12</h3>
+                                <p>Pending Prescriptions</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon orders">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="pendingOrders">8</h3>
+                                <p>Pending Orders</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon success">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="dispensedToday">25</h3>
+                                <p>Dispensed Today</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="lowStock">5</h3>
+                                <p>Low Stock Items</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Role Info -->
+                    <div class="role-info-section">
+                        <h3>Your Responsibilities</h3>
+                        <div class="role-cards">
+                            <div class="role-info-card pharmacist">
+                                <div class="role-icon">
+                                    <i class="fas fa-file-prescription"></i>
+                                </div>
+                                <h4>Process E-Prescriptions</h4>
+                                <p>Review and dispense medications based on doctor's electronic prescriptions.</p>
+                            </div>
+                            <div class="role-info-card pharmacist">
+                                <div class="role-icon">
+                                    <i class="fas fa-truck"></i>
+                                </div>
+                                <h4>Track Orders</h4>
+                                <p>Manage medicine order fulfillment and ensure timely delivery to patients.</p>
+                            </div>
+                            <div class="role-info-card pharmacist">
+                                <div class="role-icon">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <h4>Medication Information</h4>
+                                <p>Provide patients with proper dosage instructions and drug information.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="recent-activity">
+                        <h3>Recent Prescriptions to Process</h3>
+                        <div class="prescriptions-queue" id="recentPrescriptions">
+                            <!-- Prescriptions will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- E-Prescriptions Section -->
+                <section id="prescriptions-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>E-Prescriptions</h2>
+                    </div>
+
+                    <div class="filter-bar">
+                        <select id="prescriptionFilter" onchange="filterPrescriptions()">
+                            <option value="all">All Prescriptions</option>
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="ready">Ready for Pickup</option>
+                            <option value="dispensed">Dispensed</option>
+                        </select>
+                        <div class="search-bar-dash">
+                            <input type="text" placeholder="Search by patient or prescription ID..." id="searchPrescription">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+
+                    <div class="prescriptions-queue-full" id="prescriptionsQueue">
+                        <!-- Prescriptions will be populated by JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Medicine Orders Section -->
+                <section id="orders-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Medicine Orders</h2>
+                    </div>
+
+                    <div class="filter-bar">
+                        <select id="orderFilter" onchange="filterOrders()">
+                            <option value="all">All Orders</option>
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                        </select>
+                    </div>
+
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Patient</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <!-- Orders will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Inventory Section -->
+                <section id="inventory-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Inventory Management</h2>
+                        <button class="add-btn" onclick="showAddMedicineModal()">
+                            <i class="fas fa-plus"></i> Add Stock
+                        </button>
+                    </div>
+
+                    <div class="inventory-alerts">
+                        <div class="alert-card low-stock">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>
+                                <h4>Low Stock Alert</h4>
+                                <p id="lowStockCount">5 items need reordering</p>
+                            </div>
+                        </div>
+                        <div class="alert-card expiring">
+                            <i class="fas fa-clock"></i>
+                            <div>
+                                <h4>Expiring Soon</h4>
+                                <p id="expiringCount">3 items expiring in 30 days</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Medicine</th>
+                                    <th>Category</th>
+                                    <th>Stock</th>
+                                    <th>Unit Price</th>
+                                    <th>Expiry Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <!-- Inventory will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Dispensed Section -->
+                <section id="dispensed-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Dispensed Medications</h2>
+                    </div>
+
+                    <div class="filter-bar">
+                        <input type="date" id="dispensedDateFilter" onchange="filterDispensed()">
+                        <select id="dispensedTypeFilter" onchange="filterDispensed()">
+                            <option value="all">All Types</option>
+                            <option value="prescription">Prescription</option>
+                            <option value="order">Order</option>
+                        </select>
+                    </div>
+
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Patient</th>
+                                    <th>Medications</th>
+                                    <th>Type</th>
+                                    <th>Dispensed By</th>
+                                    <th>Date & Time</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dispensedTableBody">
+                                <!-- Dispensed records will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Medicine Info Section -->
+                <section id="medicines-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Medicine Information</h2>
+                    </div>
+
+                    <div class="search-medicine-info">
+                        <input type="text" placeholder="Search medicine..." id="medicineSearch" onkeyup="searchMedicine()">
+                        <button class="submit-btn" onclick="searchMedicine()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+
+                    <div class="medicine-info-grid" id="medicineInfoGrid">
+                        <!-- Medicine information will be populated by JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Profile Section -->
+                <section id="profile-section" class="dashboard-section">
+                    <div class="section-header">
+                        <h2>My Profile</h2>
+                    </div>
+
+                    <div class="profile-container-pharmacist">
+                        <div class="profile-card-pharmacist">
+                            <div class="profile-image">
+                                <img src="https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg" alt="Pharmacist">
+                                <button class="edit-photo-btn"><i class="fas fa-camera"></i></button>
+                            </div>
+                            <h3 id="profileName">Pharmacist Name</h3>
+                            <p id="profileEmail">pharmacist@ayush.com</p>
+                            <span class="badge-pharmacist">Licensed Pharmacist</span>
+                        </div>
+
+                        <div class="profile-details-pharmacist">
+                            <form id="pharmacistProfileForm" onsubmit="updateProfile(event)">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Full Name</label>
+                                        <input type="text" id="profileFullName" value="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>License Number</label>
+                                        <input type="text" id="profileLicense" value="">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Email</label>
+                                        <input type="email" id="profileEmailInput" value="">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Phone</label>
+                                        <input type="tel" id="profilePhone" value="">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Pharmacy Name</label>
+                                        <input type="text" id="profilePharmacy" value="Ayush 24/7 Pharmacy">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Experience</label>
+                                        <input type="text" id="profileExperience" value="">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Specialization</label>
+                                    <select id="profileSpecialization">
+                                        <option value="">Select</option>
+                                        <option value="retail">Retail Pharmacy</option>
+                                        <option value="clinical">Clinical Pharmacy</option>
+                                        <option value="hospital">Hospital Pharmacy</option>
+                                        <option value="research">Research Pharmacy</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="submit-btn">Update Profile</button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Stock Modal -->
+    <div class="modal" id="addStockModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Medicine Stock</h3>
+                <button class="close-modal" onclick="closeAddStockModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addStockForm" onsubmit="addStock(event)">
+                    <div class="form-group">
+                        <label>Medicine Name</label>
+                        <input type="text" id="stockMedicineName" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="stockCategory" required>
+                                <option value="">Select</option>
+                                <option value="Pain Relief">Pain Relief</option>
+                                <option value="Antibiotics">Antibiotics</option>
+                                <option value="Vitamins">Vitamins</option>
+                                <option value="Cold & Flu">Cold & Flu</option>
+                                <option value="Diabetes">Diabetes</option>
+                                <option value="Cardiac">Cardiac</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" id="stockQuantity" required min="1">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Unit Price (₹)</label>
+                            <input type="number" id="stockPrice" required min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Expiry Date</label>
+                            <input type="date" id="stockExpiry" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Batch Number</label>
+                        <input type="text" id="stockBatch" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Add to Inventory</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dispense Modal -->
+    <div class="modal" id="dispenseModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Dispense Medication</h3>
+                <button class="close-modal" onclick="closeDispenseModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="dispenseDetails"></div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="dispenseNotes" rows="3" placeholder="Add any special instructions or notes..."></textarea>
+                </div>
+                <button class="submit-btn" onclick="confirmDispense()">Confirm Dispense</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/pharmacist-dashboard.js"></script>
+    <style>
+        .prescriptions-queue, .prescriptions-queue-full {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .prescription-queue-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--secondary-color);
+        }
+        .prescription-queue-card.urgent {
+            border-left-color: var(--danger-color);
+        }
+        .prescription-queue-card .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        .prescription-queue-card .patient-info h4 {
+            color: var(--text-dark);
+            margin-bottom: 3px;
+        }
+        .prescription-queue-card .patient-info p {
+            color: var(--text-light);
+            font-size: 13px;
+        }
+        .prescription-queue-card .medications {
+            background: var(--bg-light);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .prescription-queue-card .medications h5 {
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+        .prescription-queue-card .medications ul {
+            padding-left: 20px;
+            color: var(--text-dark);
+        }
+        .prescription-queue-card .medications li {
+            margin-bottom: 5px;
+        }
+        .prescription-queue-card .actions {
+            display: flex;
+            gap: 10px;
+        }
+        .prescription-queue-card .actions button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .prescription-queue-card .actions .dispense-btn {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+        .prescription-queue-card .actions .reject-btn {
+            background: var(--bg-light);
+            color: var(--danger-color);
+        }
+        .inventory-alerts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .alert-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            background: var(--white);
+            box-shadow: var(--shadow);
+        }
+        .alert-card i {
+            font-size: 30px;
+        }
+        .alert-card.low-stock {
+            border-left: 4px solid #FF9800;
+        }
+        .alert-card.low-stock i {
+            color: #FF9800;
+        }
+        .alert-card.expiring {
+            border-left: 4px solid #F44336;
+        }
+        .alert-card.expiring i {
+            color: #F44336;
+        }
+        .alert-card h4 {
+            color: var(--text-dark);
+            margin-bottom: 3px;
+        }
+        .alert-card p {
+            color: var(--text-light);
+            font-size: 13px;
+        }
+        .search-medicine-info {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .search-medicine-info input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+        .medicine-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .medicine-info-card {
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .medicine-info-card .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 20px;
+            color: var(--white);
+        }
+        .medicine-info-card .header h4 {
+            margin-bottom: 5px;
+        }
+        .medicine-info-card .header p {
+            opacity: 0.9;
+            font-size: 13px;
+        }
+        .medicine-info-card .details {
+            padding: 20px;
+        }
+        .medicine-info-card .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #E0E0E0;
+        }
+        .medicine-info-card .detail-row:last-child {
+            border-bottom: none;
+        }
+        .medicine-info-card .detail-row .label {
+            color: var(--text-light);
+        }
+        .medicine-info-card .detail-row .value {
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+        .profile-container-pharmacist {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+        }
+        .profile-card-pharmacist {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        .profile-card-pharmacist .profile-image {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px;
+        }
+        .profile-card-pharmacist .profile-image img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .profile-card-pharmacist h3 {
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+        .profile-card-pharmacist p {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        .badge-pharmacist {
+            display: inline-block;
+            padding: 6px 15px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--white);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .profile-details-pharmacist {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .edit-photo-btn {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 35px;
+            height: 35px;
+            background: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .search-bar-dash {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+        .search-bar-dash input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+        }
+        .search-bar-dash i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--white);
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #E0E0E0;
+        }
+        .modal-header h3 {
+            color: var(--primary-color);
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+        .modal-body {
+            padding: 20px;
+        }
+        @media (max-width: 768px) {
+            .profile-container-pharmacist {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .filter-bar {
+                flex-direction: column;
+            }
+            .search-bar-dash {
+                max-width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>

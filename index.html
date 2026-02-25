@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayush 24/7 Health Care</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="main-header">
+        <div class="header-top">
+            <div class="header-container">
+                <!-- Logo Section -->
+                <div class="logo-section">
+                    <div class="logo">
+                        <i class="fas fa-heartbeat"></i>
+                        <span class="logo-text">Ayush 24/7</span>
+                    </div>
+                    
+                    <!-- Delivery Address Section -->
+                    <div class="delivery-address" onclick="openLocationModal()">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div class="address-text">
+                            <span class="deliver-label">Deliver to</span>
+                            <span class="address-value" id="currentAddress">Select Location</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="search-bar">
+                    <input type="text" placeholder="Search for medicines, doctors, lab tests...">
+                    <button><i class="fas fa-search"></i></button>
+                </div>
+
+                <!-- Auth Section -->
+                <div class="auth-section">
+                    <button class="login-btn" onclick="openLoginModal()">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button class="get-started-btn" onclick="openRegisterModal()">
+                        <i class="fas fa-user-plus"></i> Get Started
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="main-nav">
+            <div class="nav-container">
+                <ul class="nav-links">
+                    <li><a href="#" class="active" onclick="showSection('home')"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="#" onclick="showSection('appointments')"><i class="fas fa-calendar-check"></i> Book Appointment</a></li>
+                    <li><a href="#" onclick="showSection('lab-tests')"><i class="fas fa-flask"></i> Lab Test Reports</a></li>
+                    <li><a href="#" onclick="showSection('medicines')"><i class="fas fa-pills"></i> Buy Medicines</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Location Modal -->
+    <div class="modal" id="locationModal">
+        <div class="modal-content location-modal">
+            <span class="close-btn" onclick="closeLocationModal()">&times;</span>
+            <h2><i class="fas fa-map-marker-alt"></i> Deliver to</h2>
+            
+            <div class="location-options">
+                <button class="location-option" onclick="getCurrentLocation()">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Current Location</span>
+                    <small>Use GPS to detect your location</small>
+                </button>
+                
+                <div class="divider">
+                    <span>or</span>
+                </div>
+                
+                <button class="location-option" onclick="showPincodeInput()">
+                    <i class="fas fa-map-pin"></i>
+                    <span>Choose a different location</span>
+                    <small>Enter pincode manually</small>
+                </button>
+            </div>
+
+            <!-- Pincode Input Section -->
+            <div class="pincode-section" id="pincodeSection" style="display: none;">
+                <input type="text" id="pincodeInput" placeholder="Enter Pincode" maxlength="6">
+                <button onclick="searchByPincode()">Search</button>
+            </div>
+
+            <!-- Location Results -->
+            <div class="location-results" id="locationResults" style="display: none;">
+                <h3>Select your location:</h3>
+                <div id="locationList"></div>
+            </div>
+
+            <!-- Location Confirmed Message -->
+            <div class="location-confirmed" id="locationConfirmed" style="display: none;">
+                <i class="fas fa-check-circle"></i>
+                <span>Location detected and updated</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content auth-modal">
+            <span class="close-btn" onclick="closeLoginModal()">&times;</span>
+            <h2><i class="fas fa-sign-in-alt"></i> Login</h2>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Select Role</label>
+                    <select id="loginRole" required>
+                        <option value="">Choose your role</option>
+                        <option value="admin">Admin</option>
+                        <option value="doctor">Doctor</option>
+                        <option value="patient">Patient</option>
+                        <option value="pharmacist">Pharmacist</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="submit-btn">Login</button>
+            </form>
+            
+            <p class="auth-switch">Don't have an account? <a href="#" onclick="switchToRegister()">Create Account</a></p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content auth-modal">
+            <span class="close-btn" onclick="closeRegisterModal()">&times;</span>
+            <h2><i class="fas fa-user-plus"></i> Create an Account</h2>
+            
+            <!-- Role Selection -->
+            <div class="role-selection" id="roleSelection">
+                <p>Select your role:</p>
+                <div class="role-cards">
+                    <div class="role-card" onclick="selectRole('admin')">
+                        <i class="fas fa-user-shield"></i>
+                        <h3>Admin</h3>
+                        <p>Manage platform settings, oversee user accounts, and ensure data security.</p>
+                    </div>
+                    <div class="role-card" onclick="selectRole('doctor')">
+                        <i class="fas fa-user-md"></i>
+                        <h3>Doctor</h3>
+                        <p>Conduct virtual consultations, provide e-prescriptions, and manage patient records.</p>
+                    </div>
+                    <div class="role-card" onclick="selectRole('patient')">
+                        <i class="fas fa-user"></i>
+                        <h3>Patient</h3>
+                        <p>Book appointments, access medical records, and receive virtual consultations.</p>
+                    </div>
+                    <div class="role-card" onclick="selectRole('pharmacist')">
+                        <i class="fas fa-prescription-bottle-alt"></i>
+                        <h3>Pharmacist</h3>
+                        <p>Manage e-prescriptions, track orders, and provide medication information.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <form id="registerForm" style="display: none;" onsubmit="handleRegister(event)">
+                <div class="selected-role" id="selectedRoleDisplay"></div>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="regFullName" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="regEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input type="tel" id="regMobile" placeholder="Enter your mobile number" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Create a password" required>
+                </div>
+                <button type="submit" class="submit-btn">Create Account</button>
+                <button type="button" class="back-btn" onclick="backToRoleSelection()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+            </form>
+            
+            <p class="auth-switch">Already have an account? <a href="#" onclick="switchToLogin()">Login</a></p>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Home Section -->
+        <section id="home-section" class="content-section active">
+            <!-- Hero Banner -->
+            <div class="hero-banner">
+                <div class="hero-content">
+                    <h1>Your Health, Our Priority</h1>
+                    <p>24/7 Healthcare services at your fingertips. Book appointments, order medicines, and get lab tests done from the comfort of your home.</p>
+                    <div class="hero-buttons">
+                        <button onclick="showSection('appointments')">Book Appointment</button>
+                        <button onclick="showSection('medicines')">Order Medicines</button>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2869/2869791.png" alt="Healthcare">
+                </div>
+            </div>
+
+            <!-- Services Section -->
+            <div class="services-section">
+                <h2 class="section-title">Our Services</h2>
+                <div class="services-grid">
+                    <div class="service-card">
+                        <i class="fas fa-video"></i>
+                        <h3>Video Consultation</h3>
+                        <p>Connect with top doctors through secure video calls from anywhere.</p>
+                    </div>
+                    <div class="service-card">
+                        <i class="fas fa-hospital"></i>
+                        <h3>Hospital Visit</h3>
+                        <p>Book in-person appointments at nearby hospitals and clinics.</p>
+                    </div>
+                    <div class="service-card">
+                        <i class="fas fa-flask"></i>
+                        <h3>Lab Tests</h3>
+                        <p>Book lab tests with home sample collection facility.</p>
+                    </div>
+                    <div class="service-card">
+                        <i class="fas fa-pills"></i>
+                        <h3>Medicine Delivery</h3>
+                        <p>Order medicines online with fast home delivery.</p>
+                    </div>
+                    <div class="service-card">
+                        <i class="fas fa-file-medical"></i>
+                        <h3>Health Records</h3>
+                        <p>Store and access your medical records securely online.</p>
+                    </div>
+                    <div class="service-card">
+                        <i class="fas fa-ambulance"></i>
+                        <h3>Emergency Care</h3>
+                        <p>24/7 emergency assistance and ambulance services.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Doctors Section -->
+            <div class="top-doctors-section">
+                <h2 class="section-title">Top Doctors</h2>
+                <div class="doctors-grid">
+                    <div class="doctor-card">
+                        <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=300&h=300&fit=crop&crop=face" alt="Doctor">
+                        <div class="doctor-info">
+                            <h3>Dr. Sarah Johnson</h3>
+                            <p class="specialty">Cardiologist</p>
+                            <p class="experience">15 years experience</p>
+                            <div class="rating">
+                                <i class="fas fa-star"></i>
+                                <span>4.9 (250 reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="doctor-card">
+                        <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=300&h=300&fit=crop&crop=face" alt="Doctor">
+                        <div class="doctor-info">
+                            <h3>Dr. Michael Chen</h3>
+                            <p class="specialty">Neurologist</p>
+                            <p class="experience">12 years experience</p>
+                            <div class="rating">
+                                <i class="fas fa-star"></i>
+                                <span>4.8 (180 reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="doctor-card">
+                        <img src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=300&h=300&fit=crop&crop=face" alt="Doctor">
+                        <div class="doctor-info">
+                            <h3>Dr. Emily Brown</h3>
+                            <p class="specialty">Pediatrician</p>
+                            <p class="experience">10 years experience</p>
+                            <div class="rating">
+                                <i class="fas fa-star"></i>
+                                <span>4.9 (200 reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="doctor-card">
+                        <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=300&h=300&fit=crop&crop=face" alt="Doctor">
+                        <div class="doctor-info">
+                            <h3>Dr. James Wilson</h3>
+                            <p class="specialty">Orthopedic</p>
+                            <p class="experience">18 years experience</p>
+                            <div class="rating">
+                                <i class="fas fa-star"></i>
+                                <span>4.7 (150 reviews)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div class="features-section">
+                <h2 class="section-title">Why Choose Us?</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fas fa-clock"></i>
+                        <h3>24/7 Availability</h3>
+                        <p>Round-the-clock healthcare services at your convenience.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Secure & Private</h3>
+                        <p>Your health data is protected with enterprise-grade security.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-wallet"></i>
+                        <h3>Affordable Care</h3>
+                        <p>Quality healthcare at competitive prices.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-users"></i>
+                        <h3>Expert Doctors</h3>
+                        <p>Access to qualified and experienced medical professionals.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Appointments Section -->
+        <section id="appointments-section" class="content-section">
+            <div class="section-header">
+                <h2>Book an Appointment</h2>
+                <p>Browse specialists and book your appointment easily</p>
+            </div>
+
+            <!-- Specialists Grid -->
+            <div class="specialists-container">
+                <h3>Browse Specialists</h3>
+                <div class="specialists-grid" id="specialistsGrid">
+                    <div class="specialist-card" onclick="showDoctorsBySpecialty('General Physician')">
+                        <i class="fas fa-stethoscope"></i>
+                        <span>General Physician</span>
+                    </div>
+                    <div class="specialist-card" onclick="showDoctorsBySpecialty('Neurology')">
+                        <i class="fas fa-brain"></i>
+                        <span>Neurology</span>
+                    </div>
+                    <div class="specialist-card" onclick="showDoctorsBySpecialty('Paediatrics')">
+                        <i class="fas fa-baby"></i>
+                        <span>Paediatrics</span>
+                    </div>
+                    <div class="specialist-card" onclick="showDoctorsBySpecialty('Cardiology')">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>Cardiology</span>
+                    </div>
+                    <div class="specialist-card" onclick="showDoctorsBySpecialty('Dermatology')">
+                        <i class="fas fa-allergies"></i>
+                        <span>Dermatology</span>
+                    </div>
+                    <div class="specialist-card" onclick="showDoctorsBySpecialty('Orthopedics')">
+                        <i class="fas fa-bone"></i>
+                        <span>Orthopedics</span>
+                    </div>
+                    <div class="specialist-card" onclick="showDoctorsBySpecialty('Ophthalmology')">
+                        <i class="fas fa-eye"></i>
+                        <span>Ophthalmology</span>
+                    </div>
+                    <div class="specialist-card" onclick="showDoctorsBySpecialty('ENT')">
+                        <i class="fas fa-deaf"></i>
+                        <span>ENT</span>
+                    </div>
+                    <div class="specialist-card" onclick="showDoctorsBySpecialty('Dentistry')">
+                        <i class="fas fa-tooth"></i>
+                        <span>Dentistry</span>
+                    </div>
+                    <div class="specialist-card" onclick="showDoctorsBySpecialty('Psychiatry')">
+                        <i class="fas fa-head-side-virus"></i>
+                        <span>Psychiatry</span>
+                    </div>
+                    <div class="specialist-card" onclick="showDoctorsBySpecialty('Gynecology')">
+                        <i class="fas fa-female"></i>
+                        <span>Gynecology</span>
+                    </div>
+                    <div class="specialist-card" onclick="showDoctorsBySpecialty('Urology')">
+                        <i class="fas fa-kidneys"></i>
+                        <span>Urology</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doctors List (Hidden initially) -->
+            <div class="doctors-list-container" id="doctorsListContainer" style="display: none;">
+                <button class="back-btn" onclick="backToSpecialists()">
+                    <i class="fas fa-arrow-left"></i> Back to Specialists
+                </button>
+                <h3 id="specialtyTitle">Doctors</h3>
+                <div class="doctors-list" id="doctorsList"></div>
+            </div>
+
+            <!-- Appointment Booking Modal -->
+            <div class="modal" id="appointmentModal">
+                <div class="modal-content appointment-modal">
+                    <span class="close-btn" onclick="closeAppointmentModal()">&times;</span>
+                    <div class="appointment-content" id="appointmentContent"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lab Tests Section -->
+        <section id="lab-tests-section" class="content-section">
+            <div class="section-header">
+                <h2>Lab Test Reports</h2>
+                <p>Book lab tests with home sample collection</p>
+            </div>
+
+            <!-- Patient Info Card -->
+            <div class="patient-info-card">
+                <h3><i class="fas fa-user-circle"></i> Patient Information</h3>
+                <form id="patientInfoForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label>Age</label>
+                            <input type="number" placeholder="Your age">
+                        </div>
+                        <div class="form-group">
+                            <label>Blood Group</label>
+                            <select>
+                                <option value="">Select</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Lab Test Categories -->
+            <div class="lab-categories">
+                <h3>Browse by Health Concern</h3>
+                <div class="lab-categories-grid">
+                    <div class="lab-category-card" onclick="showLabTests('Diabetes')">
+                        <i class="fas fa-tint"></i>
+                        <span>Diabetes</span>
+                        <p>Blood sugar tests</p>
+                    </div>
+                    <div class="lab-category-card" onclick="showLabTests('Heart')">
+                        <i class="fas fa-heart"></i>
+                        <span>Heart Health</span>
+                        <p>Cardiac profile tests</p>
+                    </div>
+                    <div class="lab-category-card" onclick="showLabTests('Thyroid')">
+                        <i class="fas fa-disease"></i>
+                        <span>Thyroid</span>
+                        <p>Thyroid function tests</p>
+                    </div>
+                    <div class="lab-category-card" onclick="showLabTests('Kidney')">
+                        <i class="fas fa-kidneys"></i>
+                        <span>Kidney</span>
+                        <p>Renal function tests</p>
+                    </div>
+                    <div class="lab-category-card" onclick="showLabTests('Liver')">
+                        <i class="fas fa-user-md"></i>
+                        <span>Liver</span>
+                        <p>Liver function tests</p>
+                    </div>
+                    <div class="lab-category-card" onclick="showLabTests('Vitamin')">
+                        <i class="fas fa-capsules"></i>
+                        <span>Vitamins</span>
+                        <p>Vitamin deficiency tests</p>
+                    </div>
+                    <div class="lab-category-card" onclick="showLabTests('Allergy')">
+                        <i class="fas fa-allergies"></i>
+                        <span>Allergy</span>
+                        <p>Allergy panel tests</p>
+                    </div>
+                    <div class="lab-category-card" onclick="showLabTests('FullBody')">
+                        <i class="fas fa-user"></i>
+                        <span>Full Body</span>
+                        <p>Complete health checkup</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lab Tests List -->
+            <div class="lab-tests-list" id="labTestsList" style="display: none;">
+                <button class="back-btn" onclick="backToLabCategories()">
+                    <i class="fas fa-arrow-left"></i> Back to Categories
+                </button>
+                <h3 id="labCategoryTitle">Lab Tests</h3>
+                <div class="tests-grid" id="testsGrid"></div>
+            </div>
+        </section>
+
+        <!-- Medicines Section -->
+        <section id="medicines-section" class="content-section">
+            <div class="section-header">
+                <h2>Buy Medicines</h2>
+                <p>Order medicines online with fast delivery</p>
+            </div>
+
+            <!-- Medicine Categories -->
+            <div class="medicine-categories">
+                <h3>Browse by Category</h3>
+                <div class="medicine-categories-grid">
+                    <div class="medicine-category-card" onclick="showMedicines('Pain Relief')">
+                        <i class="fas fa-hand-holding-medical"></i>
+                        <span>Pain Relief</span>
+                    </div>
+                    <div class="medicine-category-card" onclick="showMedicines('Cold & Flu')">
+                        <i class="fas fa-head-side-cough"></i>
+                        <span>Cold & Flu</span>
+                    </div>
+                    <div class="medicine-category-card" onclick="showMedicines('Diabetes Care')">
+                        <i class="fas fa-syringe"></i>
+                        <span>Diabetes Care</span>
+                    </div>
+                    <div class="medicine-category-card" onclick="showMedicines('Cardiac Care')">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>Cardiac Care</span>
+                    </div>
+                    <div class="medicine-category-card" onclick="showMedicines('Vitamins')">
+                        <i class="fas fa-capsules"></i>
+                        <span>Vitamins</span>
+                    </div>
+                    <div class="medicine-category-card" onclick="showMedicines('Skin Care')">
+                        <i class="fas fa-spa"></i>
+                        <span>Skin Care</span>
+                    </div>
+                    <div class="medicine-category-card" onclick="showMedicines('Digestive')">
+                        <i class="fas fa-pills"></i>
+                        <span>Digestive Care</span>
+                    </div>
+                    <div class="medicine-category-card" onclick="showMedicines('Baby Care')">
+                        <i class="fas fa-baby"></i>
+                        <span>Baby Care</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medicines List -->
+            <div class="medicines-list" id="medicinesList" style="display: none;">
+                <button class="back-btn" onclick="backToMedicineCategories()">
+                    <i class="fas fa-arrow-left"></i> Back to Categories
+                </button>
+                <h3 id="medicineCategoryTitle">Medicines</h3>
+                <div class="medicines-grid" id="medicinesGrid"></div>
+            </div>
+
+            <!-- Cart Section -->
+            <div class="cart-section" id="cartSection" style="display: none;">
+                <h3><i class="fas fa-shopping-cart"></i> Your Cart</h3>
+                <div class="cart-items" id="cartItems"></div>
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span id="cartTotal">₹0</span>
+                </div>
+                <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3><i class="fas fa-heartbeat"></i> Ayush 24/7</h3>
+                <p>Your trusted healthcare partner available round the clock.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Services</h4>
+                <ul>
+                    <li><a href="#">Book Appointment</a></li>
+                    <li><a href="#">Lab Tests</a></li>
+                    <li><a href="#">Buy Medicines</a></li>
+                    <li><a href="#">Health Records</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Contact Us</h4>
+                <p><i class="fas fa-phone"></i> +91 1800-123-4567</p>
+                <p><i class="fas fa-envelope"></i> support@ayush247.com</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Ayush 24/7 Health Care. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
