@@ -427,7 +427,9 @@ function addMedication() {
         <input type="text" placeholder="Medicine name" class="med-name">
         <input type="text" placeholder="Dosage" class="med-dosage">
         <input type="text" placeholder="Duration" class="med-duration">
-    `;
+        <input type="number" placeholder="Qty" class="med-quantity" value="10" min="1" style="width: 80px;">
+        <button type="button" class="remove-med-btn" onclick="this.parentElement.remove()" style="background: #EF4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;"><i class="fas fa-times"></i></button>
+    `       
     container.appendChild(newItem);
 }
 
@@ -438,14 +440,15 @@ function createPrescription(event) {
     const diagnosis = document.getElementById('prescriptionDiagnosis').value;
     const notes = document.getElementById('prescriptionNotes').value;
     
-    // Collect medications
+    // Collect medications with quantity
     const medications = [];
     document.querySelectorAll('.medication-item').forEach(item => {
         const name = item.querySelector('.med-name').value;
         const dosage = item.querySelector('.med-dosage').value;
         const duration = item.querySelector('.med-duration').value;
+        const quantity = item.querySelector('.med-quantity') ? parseInt(item.querySelector('.med-quantity').value) || 10 : 10;
         if (name) {
-            medications.push({ name, dosage, duration });
+            medications.push({ name, dosage, duration, quantity });
         }
     });
     
@@ -456,17 +459,44 @@ function createPrescription(event) {
     
     // Get current appointment if exists
     const currentAppointment = window.currentPrescriptionAppointment;
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     
-    // Save prescription
+    // Get patient details from appointment or localStorage
+    let patientEmail = '';
+    let patientPhone = '';
+    let patientAge = '';
+    let patientBloodGroup = '';
+    
+    if (currentAppointment) {
+        patientEmail = currentAppointment.patientEmail || '';
+        patientPhone = currentAppointment.patientPhone || '';
+        patientAge = currentAppointment.patientAge || '';
+        patientBloodGroup = currentAppointment.patientBloodGroup || '';
+    }
+    
+    // Save prescription with full details for pharmacist
     const prescription = {
         id: 'RX' + Date.now(),
         appointmentId: currentAppointment ? currentAppointment.id : null,
         patient,
+        patientName: patient,
+        patientEmail,
+        patientPhone,
+        patientAge,
+        patientBloodGroup,
         diagnosis,
         medications,
         notes,
         date: new Date().toISOString().split('T')[0],
-        doctor: JSON.parse(localStorage.getItem('currentUser')).fullName
+        createdAt: new Date().toISOString(),
+        doctor: currentUser.fullName,
+        doctorId: currentUser.email,
+        // Status for pharmacist workflow
+        status: 'pending', // pending, processing, ready, dispensed
+        urgent: false,
+        // For order tracking
+        orderId: null,
+        orderStatus: null
     };
     
     let prescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions') || '[]');
@@ -507,7 +537,7 @@ function createPrescription(event) {
     loadPatientsFromAppointments();
     
     closePrescriptionModal();
-    showToast('Prescription created successfully! Appointment marked as completed.');
+    showToast('Prescription created successfully! Sent to pharmacy for processing.');
     loadPrescriptions();
     loadTodayAppointments();
     loadAllAppointments();

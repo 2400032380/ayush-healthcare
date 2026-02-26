@@ -105,10 +105,35 @@ function loadRecentPrescriptions() {
     `).join('');
 }
 
-// Get prescriptions data
+// Get prescriptions data from shared storage
 function getPrescriptionsData() {
-    if (prescriptionsData.length === 0) {
-        prescriptionsData = [
+    // Load from shared storage (prescriptions created by doctors)
+    let sharedPrescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || [];
+    
+    // Map to pharmacist format and combine with any existing prescriptions
+    const mappedPrescriptions = sharedPrescriptions.map(pres => ({
+        id: pres.id,
+        patientName: pres.patient || pres.patientName,
+        patientAge: pres.patientAge || 'N/A',
+        patientEmail: pres.patientEmail,
+        patientPhone: pres.patientPhone,
+        doctor: pres.doctor ? pres.doctor.replace('Dr. ', '') : 'Unknown',
+        date: pres.date,
+        medications: pres.medications.map(med => ({
+            name: med.name,
+            dosage: med.dosage,
+            quantity: med.quantity || 10
+        })),
+        diagnosis: pres.diagnosis ? pres.diagnosis.split('\n')[0] : 'Consultation',
+        status: pres.status || 'pending',
+        urgent: pres.urgent || false,
+        appointmentId: pres.appointmentId,
+        notes: pres.notes
+    }));
+    
+    // If no shared prescriptions, use sample data
+    if (mappedPrescriptions.length === 0) {
+        return [
             {
                 id: 'PRES001',
                 patientName: 'Rahul Sharma',
@@ -180,7 +205,7 @@ function getPrescriptionsData() {
             }
         ];
     }
-    return prescriptionsData;
+    return mappedPrescriptions;
 }
 
 // Load prescriptions
@@ -282,47 +307,79 @@ function filterPrescriptions() {
     `).join('');
 }
 
-// Start processing prescription
+// Start processing prescription - Updates shared storage
 function startProcessing(prescriptionId) {
-    const pres = prescriptionsData.find(p => p.id === prescriptionId);
-    if (pres) {
-        pres.status = 'processing';
-        loadPrescriptions();
-        loadRecentPrescriptions();
-        alert(`Prescription ${prescriptionId} is now being processed`);
-    }
+    // Update shared storage
+    let sharedPrescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || [];
+    sharedPrescriptions = sharedPrescriptions.map(p => {
+        if (p.id === prescriptionId) {
+            p.status = 'processing';
+        }
+        return p;
+    });
+    localStorage.setItem('ayushPrescriptions', JSON.stringify(sharedPrescriptions));
+    
+    loadPrescriptions();
+    loadRecentPrescriptions();
+    showPharmacistToast(`Prescription ${prescriptionId} is now being processed`, 'info');
 }
 
-// Mark prescription as ready
+// Mark prescription as ready - Updates shared storage
 function markReady(prescriptionId) {
-    const pres = prescriptionsData.find(p => p.id === prescriptionId);
-    if (pres) {
-        pres.status = 'ready';
-        loadPrescriptions();
-        loadRecentPrescriptions();
-        alert(`Prescription ${prescriptionId} is ready for pickup`);
-    }
+    // Update shared storage
+    let sharedPrescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || [];
+    sharedPrescriptions = sharedPrescriptions.map(p => {
+        if (p.id === prescriptionId) {
+            p.status = 'ready';
+        }
+        return p;
+    });
+    localStorage.setItem('ayushPrescriptions', JSON.stringify(sharedPrescriptions));
+    
+    loadPrescriptions();
+    loadRecentPrescriptions();
+    showPharmacistToast(`Prescription ${prescriptionId} is ready for pickup! Patient notified.`, 'success');
 }
 
 // Open dispense modal
 function openDispenseModal(prescriptionId) {
-    currentPrescription = prescriptionsData.find(p => p.id === prescriptionId);
+    const prescriptions = getPrescriptionsData();
+    currentPrescription = prescriptions.find(p => p.id === prescriptionId);
     if (currentPrescription) {
         const detailsEl = document.getElementById('dispenseDetails');
         detailsEl.innerHTML = `
-            <div style="margin-bottom: 20px;">
-                <h4>Patient: ${currentPrescription.patientName}</h4>
-                <p style="color: var(--text-light);">Prescription ID: ${currentPrescription.id}</p>
+            <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #10B981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <h4>${currentPrescription.patientName}</h4>
+                    <p style="color: var(--text-light);">Prescription ID: ${currentPrescription.id}</p>
+                    ${currentPrescription.patientPhone ? `<p style="color: #3B82F6; font-size: 13px;"><i class="fas fa-phone"></i> ${currentPrescription.patientPhone}</p>` : ''}
+                </div>
+            </div>
+            <div style="background: #FFF7ED; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                <strong style="color: #EA580C;"><i class="fas fa-stethoscope"></i> Diagnosis:</strong>
+                <span style="color: #0F172A;">${currentPrescription.diagnosis}</span>
             </div>
             <div style="background: var(--bg-light); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                <h5 style="margin-bottom: 10px; color: var(--primary-color);">Medications to Dispense:</h5>
+                <h5 style="margin-bottom: 10px; color: var(--primary-color);"><i class="fas fa-pills"></i> Medications to Dispense:</h5>
                 ${currentPrescription.medications.map(med => `
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #E0E0E0;">
-                        <span>${med.name}</span>
-                        <span>Qty: ${med.quantity}</span>
+                    <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #E0E0E0;">
+                        <div>
+                            <strong>${med.name}</strong>
+                            <p style="font-size: 12px; color: #64748B;">${med.dosage}</p>
+                        </div>
+                        <span style="background: #10B981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 13px;">Qty: ${med.quantity}</span>
                     </div>
                 `).join('')}
             </div>
+            ${currentPrescription.notes ? `
+            <div style="background: #F0FDF4; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                <strong style="color: #16A34A;"><i class="fas fa-sticky-note"></i> Doctor's Notes:</strong>
+                <span style="color: #0F172A;">${currentPrescription.notes}</span>
+            </div>
+            ` : ''}
         `;
         document.getElementById('dispenseModal').classList.add('active');
     }
@@ -334,23 +391,52 @@ function closeDispenseModal() {
     currentPrescription = null;
 }
 
-// Confirm dispense
+// Confirm dispense - Updates shared storage
 function confirmDispense() {
     if (currentPrescription) {
-        currentPrescription.status = 'dispensed';
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
         
+        // Update shared prescription storage
+        let sharedPrescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || [];
+        sharedPrescriptions = sharedPrescriptions.map(p => {
+            if (p.id === currentPrescription.id) {
+                p.status = 'dispensed';
+                p.dispensedAt = new Date().toISOString();
+                p.dispensedBy = currentUser.name;
+            }
+            return p;
+        });
+        localStorage.setItem('ayushPrescriptions', JSON.stringify(sharedPrescriptions));
+        
+        // Create dispensed record
         const dispensedRecord = {
             id: 'DISP' + Date.now(),
             prescriptionId: currentPrescription.id,
             patientName: currentPrescription.patientName,
+            patientEmail: currentPrescription.patientEmail,
+            patientPhone: currentPrescription.patientPhone,
             medications: currentPrescription.medications,
             type: 'prescription',
-            dispensedBy: JSON.parse(localStorage.getItem('currentUser')).name,
+            dispensedBy: currentUser.name,
             dateTime: new Date().toISOString(),
             notes: document.getElementById('dispenseNotes').value
         };
         
-        dispensedData.push(dispensedRecord);
+        // Save to dispensed records
+        let dispensedRecords = JSON.parse(localStorage.getItem('ayushDispensedRecords')) || [];
+        dispensedRecords.push(dispensedRecord);
+        localStorage.setItem('ayushDispensedRecords', JSON.stringify(dispensedRecords));
+        
+        // Also update any related orders
+        let orders = JSON.parse(localStorage.getItem('ayushOrders')) || [];
+        orders = orders.map(order => {
+            if (order.prescriptionId === currentPrescription.id) {
+                order.status = 'delivered';
+                order.deliveredAt = new Date().toISOString();
+            }
+            return order;
+        });
+        localStorage.setItem('ayushOrders', JSON.stringify(orders));
         
         // Update inventory
         currentPrescription.medications.forEach(med => {
@@ -365,68 +451,140 @@ function confirmDispense() {
         loadRecentPrescriptions();
         loadInventory();
         loadDispensedRecords();
+        loadOrders();
         
-        alert(`Prescription ${currentPrescription.id} has been dispensed successfully!`);
+        showPharmacistToast(`Prescription ${currentPrescription.id} dispensed to ${currentPrescription.patientName}!`, 'success');
         
         // Update stats
-        document.getElementById('dispensedToday').textContent = dispensedData.filter(d => 
+        const dispensedRecordsAll = JSON.parse(localStorage.getItem('ayushDispensedRecords')) || [];
+        document.getElementById('dispensedToday').textContent = dispensedRecordsAll.filter(d => 
             new Date(d.dateTime).toDateString() === new Date().toDateString()
         ).length;
     }
 }
 
-// Reject prescription
+// Toast notification for pharmacist
+function showPharmacistToast(message, type = 'success') {
+    const existingToast = document.querySelector('.pharmacist-toast');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'pharmacist-toast';
+    toast.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 
+                     type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 
+                     type === 'warning' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 
+                     'linear-gradient(135deg, #3b82f6, #2563eb)'};
+    `;
+    toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-info-circle'}"></i> ${message}`;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Reject prescription - Updates shared storage
 function rejectPrescription(prescriptionId) {
     const reason = prompt('Please enter reason for rejection:');
     if (reason) {
-        prescriptionsData = prescriptionsData.filter(p => p.id !== prescriptionId);
+        // Update shared storage
+        let sharedPrescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || [];
+        sharedPrescriptions = sharedPrescriptions.map(p => {
+            if (p.id === prescriptionId) {
+                p.status = 'rejected';
+                p.rejectedAt = new Date().toISOString();
+                p.rejectionReason = reason;
+            }
+            return p;
+        });
+        localStorage.setItem('ayushPrescriptions', JSON.stringify(sharedPrescriptions));
+        
         loadPrescriptions();
         loadRecentPrescriptions();
-        alert(`Prescription ${prescriptionId} has been rejected.\nReason: ${reason}`);
+        showPharmacistToast(`Prescription ${prescriptionId} rejected. Patient notified.`, 'warning');
     }
 }
 
-// Load orders
+// Load orders from shared storage
 function loadOrders() {
-    ordersData = [
-        { id: 'ORD001', patient: 'Rahul Sharma', items: 3, total: 450, date: '2025-01-18', status: 'pending' },
-        { id: 'ORD002', patient: 'Priya Patel', items: 2, total: 280, date: '2025-01-18', status: 'processing' },
-        { id: 'ORD003', patient: 'Amit Singh', items: 5, total: 850, date: '2025-01-17', status: 'shipped' },
-        { id: 'ORD004', patient: 'Neha Gupta', items: 1, total: 120, date: '2025-01-17', status: 'delivered' },
-        { id: 'ORD005', patient: 'Suresh Reddy', items: 4, total: 560, date: '2025-01-16', status: 'delivered' }
-    ];
+    // Load from shared storage
+    let sharedOrders = JSON.parse(localStorage.getItem('ayushOrders')) || [];
+    
+    // Add sample data if empty
+    if (sharedOrders.length === 0) {
+        sharedOrders = [
+            { id: 'ORD001', patientName: 'Rahul Sharma', items: 3, total: 450, date: '2025-02-20', status: 'pending' },
+            { id: 'ORD002', patientName: 'Priya Patel', items: 2, total: 280, date: '2025-02-20', status: 'processing' },
+            { id: 'ORD003', patientName: 'Amit Singh', items: 5, total: 850, date: '2025-02-19', status: 'shipped' },
+            { id: 'ORD004', patientName: 'Neha Gupta', items: 1, total: 120, date: '2025-02-19', status: 'delivered' }
+        ];
+    }
+    
+    ordersData = sharedOrders.map(order => ({
+        id: order.id,
+        patient: order.patientName || order.patient,
+        patientEmail: order.patientEmail,
+        patientPhone: order.patientPhone,
+        items: order.medications ? order.medications.length : (order.items || 0),
+        medications: order.medications,
+        total: order.total,
+        date: order.date,
+        status: order.status,
+        prescriptionId: order.prescriptionId,
+        doctor: order.doctor
+    }));
     
     const tableBody = document.getElementById('ordersTableBody');
     tableBody.innerHTML = ordersData.map(order => `
         <tr>
-            <td>${order.id}</td>
-            <td>${order.patient}</td>
-            <td>${order.items} items</td>
-            <td>₹${order.total}</td>
+            <td><strong>${order.id}</strong></td>
+            <td>
+                <div>
+                    <strong>${order.patient}</strong>
+                    ${order.patientPhone ? `<br><small style="color: #64748B;"><i class="fas fa-phone"></i> ${order.patientPhone}</small>` : ''}
+                </div>
+            </td>
+            <td>${typeof order.items === 'number' ? order.items : order.items} items</td>
+            <td style="font-weight: 600; color: #10B981;">₹${order.total}</td>
             <td>${order.date}</td>
             <td><span class="status-badge ${order.status}">${order.status}</span></td>
             <td>
                 ${order.status === 'pending' ? `
-                    <button class="action-btn" onclick="processOrder('${order.id}')">
-                        <i class="fas fa-play"></i>
+                    <button class="action-btn" onclick="processOrder('${order.id}')" title="Confirm Order">
+                        <i class="fas fa-check"></i>
                     </button>
-                ` : order.status === 'processing' ? `
-                    <button class="action-btn" onclick="shipOrder('${order.id}')">
+                ` : order.status === 'confirmed' || order.status === 'processing' ? `
+                    <button class="action-btn" onclick="shipOrder('${order.id}')" title="Ship Order">
                         <i class="fas fa-truck"></i>
                     </button>
                 ` : order.status === 'shipped' ? `
-                    <button class="action-btn" onclick="deliverOrder('${order.id}')">
-                        <i class="fas fa-check"></i>
+                    <button class="action-btn" onclick="deliverOrder('${order.id}')" title="Mark Delivered">
+                        <i class="fas fa-check-double"></i>
                     </button>
                 ` : ''}
-                <button class="action-btn" onclick="viewOrderDetails('${order.id}')">
+                <button class="action-btn" onclick="viewOrderDetails('${order.id}')" title="View Details">
                     <i class="fas fa-eye"></i>
                 </button>
             </td>
         </tr>
     `).join('');
 
-    document.getElementById('pendingOrders').textContent = ordersData.filter(o => o.status === 'pending' || o.status === 'processing').length;
+    document.getElementById('pendingOrders').textContent = ordersData.filter(o => o.status === 'pending' || o.status === 'processing' || o.status === 'confirmed').length;
 }
 
 // Filter orders
@@ -465,41 +623,150 @@ function filterOrders() {
     `).join('');
 }
 
-// Process order
+// Process order - Updates shared storage
 function processOrder(orderId) {
-    const order = ordersData.find(o => o.id === orderId);
-    if (order) {
-        order.status = 'processing';
-        loadOrders();
-        alert(`Order ${orderId} is now being processed`);
+    let orders = JSON.parse(localStorage.getItem('ayushOrders')) || [];
+    orders = orders.map(o => {
+        if (o.id === orderId) {
+            o.status = 'confirmed';
+            o.confirmedAt = new Date().toISOString();
+        }
+        return o;
+    });
+    localStorage.setItem('ayushOrders', JSON.stringify(orders));
+    
+    // Also update prescription status
+    const order = orders.find(o => o.id === orderId);
+    if (order && order.prescriptionId) {
+        let prescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || [];
+        prescriptions = prescriptions.map(p => {
+            if (p.id === order.prescriptionId) {
+                p.orderStatus = 'confirmed';
+            }
+            return p;
+        });
+        localStorage.setItem('ayushPrescriptions', JSON.stringify(prescriptions));
     }
+    
+    loadOrders();
+    showPharmacistToast(`Order ${orderId} confirmed`, 'success');
 }
 
-// Ship order
+// Ship order - Updates shared storage
 function shipOrder(orderId) {
-    const order = ordersData.find(o => o.id === orderId);
-    if (order) {
-        order.status = 'shipped';
-        loadOrders();
-        alert(`Order ${orderId} has been shipped`);
+    let orders = JSON.parse(localStorage.getItem('ayushOrders')) || [];
+    orders = orders.map(o => {
+        if (o.id === orderId) {
+            o.status = 'shipped';
+            o.shippedAt = new Date().toISOString();
+        }
+        return o;
+    });
+    localStorage.setItem('ayushOrders', JSON.stringify(orders));
+    
+    // Also update prescription status
+    const order = orders.find(o => o.id === orderId);
+    if (order && order.prescriptionId) {
+        let prescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || [];
+        prescriptions = prescriptions.map(p => {
+            if (p.id === order.prescriptionId) {
+                p.orderStatus = 'shipped';
+            }
+            return p;
+        });
+        localStorage.setItem('ayushPrescriptions', JSON.stringify(prescriptions));
     }
+    
+    loadOrders();
+    showPharmacistToast(`Order ${orderId} shipped! Patient notified.`, 'success');
 }
 
-// Deliver order
+// Deliver order - Updates shared storage
 function deliverOrder(orderId) {
-    const order = ordersData.find(o => o.id === orderId);
-    if (order) {
-        order.status = 'delivered';
-        loadOrders();
-        alert(`Order ${orderId} has been delivered`);
+    let orders = JSON.parse(localStorage.getItem('ayushOrders')) || [];
+    orders = orders.map(o => {
+        if (o.id === orderId) {
+            o.status = 'delivered';
+            o.deliveredAt = new Date().toISOString();
+        }
+        return o;
+    });
+    localStorage.setItem('ayushOrders', JSON.stringify(orders));
+    
+    // Also update prescription status
+    const order = orders.find(o => o.id === orderId);
+    if (order && order.prescriptionId) {
+        let prescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || [];
+        prescriptions = prescriptions.map(p => {
+            if (p.id === order.prescriptionId) {
+                p.orderStatus = 'delivered';
+                p.status = 'dispensed';
+            }
+            return p;
+        });
+        localStorage.setItem('ayushPrescriptions', JSON.stringify(prescriptions));
     }
+    
+    loadOrders();
+    showPharmacistToast(`Order ${orderId} delivered successfully!`, 'success');
 }
 
 // View order details
 function viewOrderDetails(orderId) {
-    const order = ordersData.find(o => o.id === orderId);
+    let orders = JSON.parse(localStorage.getItem('ayushOrders')) || ordersData;
+    const order = orders.find(o => o.id === orderId);
     if (order) {
-        alert(`Order Details:\n\nID: ${order.id}\nPatient: ${order.patient}\nItems: ${order.items}\nTotal: ₹${order.total}\nDate: ${order.date}\nStatus: ${order.status}`);
+        let modal = document.getElementById('orderDetailModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'orderDetailModal';
+            modal.className = 'modal';
+            document.body.appendChild(modal);
+        }
+        
+        const medicationsList = order.medications ? 
+            order.medications.map(med => `<li>${med.name} - ${med.dosage || ''} (Qty: ${med.quantity || 1})</li>`).join('') :
+            '<li>No medications data</li>';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3><i class="fas fa-shopping-bag"></i> Order Details</h3>
+                    <button class="close-modal" onclick="document.getElementById('orderDetailModal').classList.remove('active')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div style="background: #E0F2FE; padding: 12px; border-radius: 8px;">
+                            <label style="color: #0369A1; font-size: 11px;">ORDER ID</label>
+                            <p style="font-weight: 600;">${order.id}</p>
+                        </div>
+                        <div style="background: #FCE7F3; padding: 12px; border-radius: 8px;">
+                            <label style="color: #BE185D; font-size: 11px;">STATUS</label>
+                            <p style="font-weight: 600; text-transform: capitalize;">${order.status}</p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #F8FAFC; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <h4 style="margin-bottom: 10px; color: #0F172A;"><i class="fas fa-user"></i> Patient: ${order.patientName || order.patient}</h4>
+                        ${order.patientEmail ? `<p style="color: #64748B;"><i class="fas fa-envelope"></i> ${order.patientEmail}</p>` : ''}
+                        ${order.patientPhone ? `<p style="color: #64748B;"><i class="fas fa-phone"></i> ${order.patientPhone}</p>` : ''}
+                        ${order.doctor ? `<p style="color: #64748B;"><i class="fas fa-user-md"></i> Prescribed by: ${order.doctor}</p>` : ''}
+                    </div>
+                    
+                    <div style="background: #F0FDF4; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <h5 style="color: #16A34A; margin-bottom: 10px;"><i class="fas fa-pills"></i> Medications:</h5>
+                        <ul style="margin: 0; padding-left: 20px;">${medicationsList}</ul>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #FEF3C7; padding: 12px; border-radius: 8px;">
+                        <span style="font-weight: 600;">Total Amount:</span>
+                        <span style="font-size: 20px; font-weight: 700; color: #D97706;">₹${order.total}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        modal.classList.add('active');
     }
 }
 
@@ -607,21 +874,34 @@ function deleteStock(itemId) {
     }
 }
 
-// Load dispensed records
+// Load dispensed records from shared storage
 function loadDispensedRecords() {
-    if (dispensedData.length === 0) {
-        dispensedData = [
-            { id: 'DISP001', prescriptionId: 'PRES005', patientName: 'Suresh Reddy', medications: [{name: 'Amlodipine 5mg'}, {name: 'Vitamin D3'}], type: 'prescription', dispensedBy: 'Pharmacist', dateTime: '2025-01-18T10:30:00' },
-            { id: 'DISP002', prescriptionId: null, patientName: 'Walk-in Customer', medications: [{name: 'Paracetamol 500mg'}], type: 'order', dispensedBy: 'Pharmacist', dateTime: '2025-01-18T11:15:00' }
+    // Load from shared storage
+    let sharedDispensedRecords = JSON.parse(localStorage.getItem('ayushDispensedRecords')) || [];
+    
+    // If empty, use sample data
+    if (sharedDispensedRecords.length === 0) {
+        sharedDispensedRecords = [
+            { id: 'DISP001', prescriptionId: 'PRES005', patientName: 'Suresh Reddy', medications: [{name: 'Amlodipine 5mg'}, {name: 'Vitamin D3'}], type: 'prescription', dispensedBy: 'Pharmacist', dateTime: '2025-02-20T10:30:00' },
+            { id: 'DISP002', prescriptionId: null, patientName: 'Walk-in Customer', medications: [{name: 'Paracetamol 500mg'}], type: 'order', dispensedBy: 'Pharmacist', dateTime: '2025-02-20T11:15:00' }
         ];
     }
+    
+    dispensedData = sharedDispensedRecords;
     
     const tableBody = document.getElementById('dispensedTableBody');
     tableBody.innerHTML = dispensedData.map(record => `
         <tr>
-            <td>${record.id}</td>
-            <td>${record.patientName}</td>
-            <td>${record.medications.map(m => m.name).join(', ')}</td>
+            <td><strong>${record.id}</strong></td>
+            <td>
+                <strong>${record.patientName}</strong>
+                ${record.patientPhone ? `<br><small style="color: #64748B;"><i class="fas fa-phone"></i> ${record.patientPhone}</small>` : ''}
+            </td>
+            <td>
+                <div style="max-width: 200px;">
+                    ${record.medications.map(m => `<span style="background: #E0F2FE; color: #0369A1; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin: 2px; display: inline-block;">${m.name}</span>`).join('')}
+                </div>
+            </td>
             <td><span class="status-badge ${record.type}">${record.type}</span></td>
             <td>${record.dispensedBy}</td>
             <td>${new Date(record.dateTime).toLocaleString()}</td>

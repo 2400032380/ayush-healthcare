@@ -438,7 +438,7 @@
 
     <!-- Prescription Modal -->
     <div class="modal" id="prescriptionModal">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content" style="max-width: 700px;">
             <span class="close-btn" onclick="closePrescriptionModal()">&times;</span>
             <h2><i class="fas fa-file-prescription"></i> New E-Prescription</h2>
             <form id="prescriptionForm" onsubmit="createPrescription(event)">
@@ -451,15 +451,16 @@
                 </div>
                 <div class="form-group">
                     <label>Diagnosis</label>
-                    <textarea id="prescriptionDiagnosis" rows="3" required></textarea>
+                    <textarea id="prescriptionDiagnosis" rows="3" required placeholder="Enter diagnosis details..."></textarea>
                 </div>
                 <div class="form-group">
                     <label>Medications</label>
                     <div id="medicationsList">
                         <div class="medication-item">
-                            <input type="text" placeholder="Medicine name" class="med-name">
-                            <input type="text" placeholder="Dosage" class="med-dosage">
-                            <input type="text" placeholder="Duration" class="med-duration">
+                            <input type="text" placeholder="Medicine name" class="med-name" required>
+                            <input type="text" placeholder="Dosage (e.g., 1-0-1)" class="med-dosage">
+                            <input type="text" placeholder="Duration (e.g., 7 days)" class="med-duration">
+                            <input type="number" placeholder="Qty" class="med-quantity" value="10" min="1" style="width: 80px;">
                         </div>
                     </div>
                     <button type="button" class="add-btn" onclick="addMedication()" style="margin-top: 10px;">
@@ -468,9 +469,11 @@
                 </div>
                 <div class="form-group">
                     <label>Additional Notes</label>
-                    <textarea id="prescriptionNotes" rows="2"></textarea>
+                    <textarea id="prescriptionNotes" rows="2" placeholder="Any special instructions for patient or pharmacist..."></textarea>
                 </div>
-                <button type="submit" class="submit-btn">Create Prescription</button>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="submit-btn" style="flex: 1;"><i class="fas fa-paper-plane"></i> Create & Send to Pharmacy</button>
+                </div>
             </form>
         </div>
     </div>
@@ -656,14 +659,19 @@
         }
         .medication-item {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
+            grid-template-columns: 2fr 1fr 1fr 80px auto;
             gap: 10px;
             margin-bottom: 10px;
+            align-items: center;
         }
         .medication-item input {
             padding: 10px;
             border: 2px solid #E0E0E0;
             border-radius: 6px;
+        }
+        .medication-item input:focus {
+            border-color: var(--primary-color);
+            outline: none;
         }
         @media (max-width: 768px) {
             .profile-container {

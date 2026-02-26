@@ -1351,3 +1351,278 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== ENHANCED PRESCRIPTION STYLES ===== */
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    top: 100px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: white;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10000;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Prescription Card Enhanced */
+.prescription-card {
+    background: var(--white);
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--doctor-success);
+}
+
+.prescription-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+}
+
+.prescription-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.rx-icon {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--doctor-success);
+    background: #D1FAE5;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.prescription-details h4 {
+    color: var(--text-dark);
+    margin-bottom: 5px;
+}
+
+.prescription-details p {
+    color: var(--text-light);
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+.prescription-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(30, 58, 95, 0.6);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    backdrop-filter: blur(5px);
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideDown 0.3s ease;
+    padding: 25px;
+    position: relative;
+}
+
+@keyframes modalSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-content h2 {
+    color: var(--doctor-primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modal-content h2 i {
+    color: var(--doctor-success);
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #F1F5F9;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748B;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    background: var(--doctor-accent);
+    color: white;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.status-badge.pending {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.status-badge.confirmed {
+    background: #D1FAE5;
+    color: #059669;
+}
+
+.status-badge.completed {
+    background: #DBEAFE;
+    color: #2563EB;
+}
+
+.status-badge.rejected, .status-badge.cancelled {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+/* Medication Item Enhanced */
+.medication-item {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 80px auto;
+    gap: 10px;
+    margin-bottom: 12px;
+    align-items: center;
+}
+
+.medication-item input {
+    padding: 12px 15px;
+    border: 2px solid #E2E8F0;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.medication-item input:focus {
+    border-color: var(--doctor-primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+.medication-item input::placeholder {
+    color: #94A3B8;
+}
+
+/* Remove Medication Button */
+.remove-med-btn {
+    background: #EF4444 !important;
+    color: white !important;
+    transition: all 0.3s ease;
+}
+
+.remove-med-btn:hover {
+    background: #DC2626 !important;
+    transform: scale(1.05);
+}
+
+/* Add Medication Button */
+.add-btn {
+    background: linear-gradient(135deg, var(--doctor-primary), var(--doctor-secondary));
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(30, 58, 95, 0.3);
+}
+
+/* Submit Button */
+.submit-btn {
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+

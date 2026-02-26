@@ -1060,39 +1060,275 @@ function closeAppointmentDetailModal() {
 
 // Load prescriptions
 function loadPrescriptions() {
-    const prescriptions = JSON.parse(localStorage.getItem('patientPrescriptions')) || getSamplePrescriptions();
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const patientName = currentUser ? currentUser.name : '';
+    const patientEmail = currentUser ? currentUser.email : '';
+    
+    // Load from shared storage (prescriptions created by doctors)
+    let allPrescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || [];
+    
+    // Filter prescriptions for current patient
+    let prescriptions = allPrescriptions.filter(pres => {
+        return pres.patientEmail === patientEmail || 
+               pres.patient === patientName ||
+               pres.patientName === patientName;
+    });
+    
+    // If no real prescriptions, show sample data
+    if (prescriptions.length === 0) {
+        prescriptions = getSamplePrescriptions();
+    }
     
     const prescriptionsList = document.getElementById('patientPrescriptionsList');
     
-    prescriptionsList.innerHTML = prescriptions.map(pres => `
-        <div class="prescription-card">
+    if (prescriptions.length === 0) {
+        prescriptionsList.innerHTML = `
+            <div style="text-align: center; padding: 40px; background: linear-gradient(135deg, #E8F4FD, #F0FDFA); border-radius: 15px;">
+                <i class="fas fa-file-prescription" style="font-size: 50px; color: #10B981; margin-bottom: 15px;"></i>
+                <h3 style="color: #1E3A5F;">No Prescriptions Yet</h3>
+                <p style="color: #5A6B7C;">Your prescriptions will appear here after a doctor consultation.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    prescriptionsList.innerHTML = prescriptions.map(pres => {
+        // Status styling
+        const statusColors = {
+            'pending': { bg: '#FEF3C7', text: '#D97706', icon: 'fa-clock', label: 'Waiting for Pharmacy' },
+            'processing': { bg: '#DBEAFE', text: '#2563EB', icon: 'fa-cog fa-spin', label: 'Being Prepared' },
+            'ready': { bg: '#D1FAE5', text: '#059669', icon: 'fa-check-circle', label: 'Ready for Pickup' },
+            'dispensed': { bg: '#E0E7FF', text: '#4338CA', icon: 'fa-check-double', label: 'Dispensed' },
+            'rejected': { bg: '#FEE2E2', text: '#DC2626', icon: 'fa-times-circle', label: 'Rejected' }
+        };
+        
+        const status = pres.status || 'pending';
+        const statusStyle = statusColors[status] || statusColors['pending'];
+        
+        return `
+        <div class="prescription-card" style="border-left: 4px solid ${statusStyle.text};">
             <div class="prescription-header">
-                <h4>${pres.doctor}</h4>
-                <span class="prescription-date">${pres.date}</span>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="font-size: 28px; color: #10B981; font-weight: bold;">Rx</div>
+                    <div>
+                        <h4 style="margin: 0;">${pres.doctor}</h4>
+                        <p style="color: #64748B; font-size: 13px;">${pres.date}</p>
+                    </div>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+                    <span style="background: ${statusStyle.bg}; color: ${statusStyle.text}; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                        <i class="fas ${statusStyle.icon}"></i> ${statusStyle.label}
+                    </span>
+                    <span style="font-size: 11px; color: #94A3B8;">${pres.id}</span>
+                </div>
             </div>
-            <div class="prescription-diagnosis">
-                <strong>Diagnosis:</strong> ${pres.diagnosis}
+            <div class="prescription-diagnosis" style="background: #FFF7ED; padding: 12px; border-radius: 8px; margin: 15px 0;">
+                <strong style="color: #EA580C;"><i class="fas fa-stethoscope"></i> Diagnosis:</strong> 
+                <span style="color: #0F172A;">${pres.diagnosis ? pres.diagnosis.split('\n')[0] : 'Consultation'}</span>
             </div>
-            <div class="prescription-medications">
-                <strong>Medications:</strong>
-                <ul>
+            <div class="prescription-medications" style="background: #F0FDF4; padding: 12px; border-radius: 8px;">
+                <strong style="color: #16A34A;"><i class="fas fa-pills"></i> Medications:</strong>
+                <ul style="margin: 10px 0 0 20px; color: #0F172A;">
                     ${pres.medications.map(med => `
-                        <li>${med.name} - ${med.dosage} (${med.duration})</li>
+                        <li style="margin-bottom: 5px;">${med.name} - ${med.dosage} ${med.duration ? `(${med.duration})` : ''} ${med.quantity ? `<span style="color: #64748B;">× ${med.quantity}</span>` : ''}</li>
                     `).join('')}
                 </ul>
             </div>
-            <div class="prescription-actions">
-                <button class="action-btn" onclick="orderMedicinesFromPrescription('${pres.id}')">
-                    <i class="fas fa-shopping-cart"></i> Order Medicines
+            ${pres.notes ? `
+            <div style="background: #EFF6FF; padding: 10px; border-radius: 8px; margin-top: 10px;">
+                <strong style="color: #2563EB;"><i class="fas fa-sticky-note"></i> Notes:</strong>
+                <span style="color: #0F172A;">${pres.notes}</span>
+            </div>
+            ` : ''}
+            <div class="prescription-actions" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                ${status === 'pending' || status === 'processing' ? `
+                    <button class="action-btn" onclick="trackPrescriptionStatus('${pres.id}')" style="background: linear-gradient(135deg, #3B82F6, #2563EB); color: white;">
+                        <i class="fas fa-map-marker-alt"></i> Track Status
+                    </button>
+                ` : ''}
+                ${status === 'ready' ? `
+                    <button class="action-btn" onclick="showPickupDetails('${pres.id}')" style="background: linear-gradient(135deg, #10B981, #059669); color: white;">
+                        <i class="fas fa-store"></i> Pickup Details
+                    </button>
+                ` : ''}
+                ${status !== 'dispensed' && status !== 'rejected' ? `
+                    <button class="action-btn" onclick="orderMedicinesFromPrescription('${pres.id}')" style="background: linear-gradient(135deg, #F97316, #EA580C); color: white;">
+                        <i class="fas fa-shopping-cart"></i> Order Online
+                    </button>
+                ` : ''}
+                <button class="action-btn" onclick="viewFullPrescription('${pres.id}')" style="background: #F1F5F9; color: #475569;">
+                    <i class="fas fa-eye"></i> View Full
                 </button>
-                <button class="action-btn" onclick="downloadPrescription('${pres.id}')">
+                <button class="action-btn" onclick="downloadPrescription('${pres.id}')" style="background: #F1F5F9; color: #475569;">
                     <i class="fas fa-download"></i> Download
                 </button>
             </div>
+            ${status === 'rejected' && pres.rejectionReason ? `
+            <div style="margin-top: 15px; padding: 12px; background: linear-gradient(135deg, #FEE2E2, #FECACA); border-radius: 8px;">
+                <strong style="color: #DC2626;"><i class="fas fa-exclamation-triangle"></i> Rejection Reason:</strong>
+                <span style="color: #7F1D1D;">${pres.rejectionReason}</span>
+            </div>
+            ` : ''}
+            ${pres.orderStatus ? `
+            <div style="margin-top: 15px; padding: 12px; background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 8px;">
+                <strong style="color: #B45309;"><i class="fas fa-truck"></i> Order Status:</strong>
+                <span style="color: #92400E;">${getOrderStatusText(pres.orderStatus)}</span>
+            </div>
+            ` : ''}
         </div>
-    `).join('');
+    `}).join('');
 
     document.getElementById('activePrescriptions').textContent = prescriptions.length;
+}
+
+// Track prescription status
+function trackPrescriptionStatus(prescriptionId) {
+    const prescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || [];
+    const pres = prescriptions.find(p => p.id === prescriptionId);
+    
+    if (!pres) {
+        showToast('Prescription not found', 'error');
+        return;
+    }
+    
+    const statusSteps = [
+        { status: 'pending', label: 'Sent to Pharmacy', icon: 'fa-paper-plane' },
+        { status: 'processing', label: 'Being Prepared', icon: 'fa-cog' },
+        { status: 'ready', label: 'Ready for Pickup', icon: 'fa-box' },
+        { status: 'dispensed', label: 'Dispensed', icon: 'fa-check-double' }
+    ];
+    
+    const currentStatusIndex = statusSteps.findIndex(s => s.status === pres.status);
+    
+    let modal = document.getElementById('trackingModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'trackingModal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close-btn" onclick="document.getElementById('trackingModal').style.display='none'">&times;</span>
+            <h2 style="text-align: center;"><i class="fas fa-map-marker-alt" style="color: #10B981;"></i> Prescription Status</h2>
+            <p style="text-align: center; color: #64748B;">ID: ${prescriptionId}</p>
+            
+            <div style="margin-top: 30px;">
+                ${statusSteps.map((step, index) => `
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: ${index <= currentStatusIndex ? '#10B981' : '#E2E8F0'}; color: ${index <= currentStatusIndex ? 'white' : '#94A3B8'};">
+                            <i class="fas ${step.icon}"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <p style="font-weight: 600; color: ${index <= currentStatusIndex ? '#0F172A' : '#94A3B8'};">${step.label}</p>
+                            ${index === currentStatusIndex ? '<p style="font-size: 12px; color: #10B981;">Current Status</p>' : ''}
+                        </div>
+                        ${index <= currentStatusIndex ? '<i class="fas fa-check-circle" style="color: #10B981;"></i>' : ''}
+                    </div>
+                    ${index < statusSteps.length - 1 ? `<div style="margin-left: 18px; width: 4px; height: 20px; background: ${index < currentStatusIndex ? '#10B981' : '#E2E8F0'}; margin-bottom: 10px;"></div>` : ''}
+                `).join('')}
+            </div>
+            
+            <button onclick="document.getElementById('trackingModal').style.display='none'" style="width: 100%; margin-top: 20px; padding: 12px; background: #10B981; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 500;">Close</button>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+}
+
+// Show pickup details
+function showPickupDetails(prescriptionId) {
+    showToast('Your medicines are ready for pickup at Ayush 24/7 Pharmacy, Ground Floor. Please bring your ID.', 'success');
+}
+
+// View full prescription
+function viewFullPrescription(prescriptionId) {
+    const prescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || getSamplePrescriptions();
+    const pres = prescriptions.find(p => p.id === prescriptionId);
+    
+    if (!pres) {
+        showToast('Prescription not found', 'error');
+        return;
+    }
+    
+    let modal = document.getElementById('prescriptionViewModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'prescriptionViewModal';
+        modal.className = 'modal';
+        document.body.appendChild(modal);
+    }
+    
+    const medicationsHtml = pres.medications.map((med, i) => `
+        <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: ${i % 2 === 0 ? '#F8FAFC' : '#FFF'}; border-radius: 8px; margin-bottom: 5px;">
+            <span style="background: #10B981; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold;">${i + 1}</span>
+            <div style="flex: 1;">
+                <p style="font-weight: 600; color: #0F172A; margin-bottom: 3px;">${med.name}</p>
+                <p style="font-size: 13px; color: #64748B;">${med.dosage} | ${med.duration || 'As directed'} | Qty: ${med.quantity || 'N/A'}</p>
+            </div>
+        </div>
+    `).join('');
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close-btn" onclick="document.getElementById('prescriptionViewModal').style.display='none'">&times;</span>
+            <div style="text-align: center; padding: 20px 0; border-bottom: 2px dashed #E2E8F0;">
+                <div style="font-size: 40px; color: #10B981; margin-bottom: 10px;">Rx</div>
+                <h2 style="color: #0F172A; margin-bottom: 5px;">E-Prescription</h2>
+                <p style="color: #64748B;">ID: ${pres.id}</p>
+            </div>
+            
+            <div style="padding: 20px 0;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div style="background: #E0F2FE; padding: 12px; border-radius: 8px;">
+                        <label style="color: #0369A1; font-size: 11px; font-weight: 600;">DOCTOR</label>
+                        <p style="font-weight: 600; color: #0F172A;">${pres.doctor}</p>
+                    </div>
+                    <div style="background: #FCE7F3; padding: 12px; border-radius: 8px;">
+                        <label style="color: #BE185D; font-size: 11px; font-weight: 600;">DATE</label>
+                        <p style="font-weight: 600; color: #0F172A;">${pres.date}</p>
+                    </div>
+                </div>
+                
+                <div style="background: #FFF7ED; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                    <label style="color: #EA580C; font-size: 12px; font-weight: 600;"><i class="fas fa-stethoscope"></i> DIAGNOSIS</label>
+                    <p style="color: #0F172A; margin-top: 8px; white-space: pre-wrap;">${pres.diagnosis || 'N/A'}</p>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="color: #10B981; font-size: 12px; font-weight: 600;"><i class="fas fa-pills"></i> MEDICATIONS</label>
+                    <div style="margin-top: 10px;">${medicationsHtml}</div>
+                </div>
+                
+                ${pres.notes ? `
+                <div style="background: #F0FDF4; padding: 15px; border-radius: 10px;">
+                    <label style="color: #16A34A; font-size: 12px; font-weight: 600;"><i class="fas fa-sticky-note"></i> NOTES</label>
+                    <p style="color: #0F172A; margin-top: 8px;">${pres.notes}</p>
+                </div>
+                ` : ''}
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button onclick="downloadPrescription('${pres.id}')" style="background: #0891B2; color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer;"><i class="fas fa-download"></i> Download</button>
+                <button onclick="document.getElementById('prescriptionViewModal').style.display='none'" style="background: #F1F5F9; color: #64748B; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer;">Close</button>
+            </div>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+}
+
+// Get order status text
+function getOrderStatusText(status) {
+    const statusMap = {
+        'pending': 'Order Placed - Awaiting Confirmation',
+        'confirmed': 'Order Confirmed',
+        'processing': 'Preparing Your Order',
+        'shipped': 'Out for Delivery',
+        'delivered': 'Delivered'
+    };
+    return statusMap[status] || status;
 }
 
 // Get sample prescriptions
@@ -1103,9 +1339,10 @@ function getSamplePrescriptions() {
             doctor: 'Dr. Rajesh Kumar',
             date: '2025-01-15',
             diagnosis: 'Viral Fever',
+            status: 'dispensed',
             medications: [
-                { name: 'Paracetamol 500mg', dosage: '1 tablet 3 times daily', duration: '5 days' },
-                { name: 'Cetirizine 10mg', dosage: '1 tablet at night', duration: '5 days' }
+                { name: 'Paracetamol 500mg', dosage: '1 tablet 3 times daily', duration: '5 days', quantity: 15 },
+                { name: 'Cetirizine 10mg', dosage: '1 tablet at night', duration: '5 days', quantity: 5 }
             ]
         },
         {
@@ -1113,23 +1350,186 @@ function getSamplePrescriptions() {
             doctor: 'Dr. Amit Verma',
             date: '2025-01-10',
             diagnosis: 'Blood Pressure Management',
+            status: 'ready',
             medications: [
-                { name: 'Amlodipine 5mg', dosage: '1 tablet daily morning', duration: '30 days' },
-                { name: 'Aspirin 75mg', dosage: '1 tablet daily after lunch', duration: '30 days' }
+                { name: 'Amlodipine 5mg', dosage: '1 tablet daily morning', duration: '30 days', quantity: 30 },
+                { name: 'Aspirin 75mg', dosage: '1 tablet daily after lunch', duration: '30 days', quantity: 30 }
             ]
         }
     ];
 }
 
-// Order medicines from prescription
+// Order medicines from prescription - Creates order and sends to pharmacist
 function orderMedicinesFromPrescription(prescriptionId) {
-    showDashboardSection('medicines');
-    alert('Prescription medicines added to list. Please select from available medicines.');
+    const prescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || getSamplePrescriptions();
+    const pres = prescriptions.find(p => p.id === prescriptionId);
+    
+    if (!pres) {
+        showToast('Prescription not found', 'error');
+        return;
+    }
+    
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const patientProfile = JSON.parse(localStorage.getItem('patientProfile')) || {};
+    
+    // Calculate total
+    const itemPrices = {
+        'Paracetamol': 4.5,
+        'Cetirizine': 3.5,
+        'Ibuprofen': 6.5,
+        'Azithromycin': 35,
+        'Metformin': 8,
+        'Amlodipine': 12,
+        'Vitamin': 4.7,
+        'Omeprazole': 15,
+        'Aspirin': 5
+    };
+    
+    let total = 0;
+    pres.medications.forEach(med => {
+        let price = 10; // default price
+        Object.keys(itemPrices).forEach(key => {
+            if (med.name.toLowerCase().includes(key.toLowerCase())) {
+                price = itemPrices[key];
+            }
+        });
+        total += price * (med.quantity || 10);
+    });
+    
+    // Create order
+    const order = {
+        id: 'ORD' + Date.now(),
+        prescriptionId: pres.id,
+        patientName: currentUser.name,
+        patientEmail: currentUser.email,
+        patientPhone: patientProfile.phone || '',
+        patientAddress: patientProfile.address || '',
+        items: pres.medications.length,
+        medications: pres.medications,
+        total: Math.round(total),
+        date: new Date().toISOString().split('T')[0],
+        createdAt: new Date().toISOString(),
+        status: 'pending',
+        doctor: pres.doctor,
+        diagnosis: pres.diagnosis
+    };
+    
+    // Save order to shared storage
+    let orders = JSON.parse(localStorage.getItem('ayushOrders')) || [];
+    orders.push(order);
+    localStorage.setItem('ayushOrders', JSON.stringify(orders));
+    
+    // Update prescription with order info
+    let allPrescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || [];
+    allPrescriptions = allPrescriptions.map(p => {
+        if (p.id === prescriptionId) {
+            p.orderId = order.id;
+            p.orderStatus = 'pending';
+        }
+        return p;
+    });
+    localStorage.setItem('ayushPrescriptions', JSON.stringify(allPrescriptions));
+    
+    showToast(`Order placed successfully! Order ID: ${order.id}`, 'success');
+    loadPrescriptions();
+    loadOrders();
+}
+
+// View prescription from completed appointment
+function viewMyPrescription(appointmentId) {
+    const prescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || [];
+    const pres = prescriptions.find(p => p.appointmentId === appointmentId);
+    
+    if (pres) {
+        viewFullPrescription(pres.id);
+    } else {
+        showToast('Prescription not found for this appointment', 'error');
+    }
 }
 
 // Download prescription
 function downloadPrescription(prescriptionId) {
-    alert('Downloading prescription PDF...');
+    const prescriptions = JSON.parse(localStorage.getItem('ayushPrescriptions')) || getSamplePrescriptions();
+    const pres = prescriptions.find(p => p.id === prescriptionId);
+    
+    if (!pres) {
+        showToast('Prescription not found', 'error');
+        return;
+    }
+    
+    // Create printable content
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Prescription - ${pres.id}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+                .header { text-align: center; border-bottom: 2px solid #10B981; padding-bottom: 20px; margin-bottom: 20px; }
+                .header h1 { color: #10B981; margin: 0; }
+                .rx { font-size: 48px; color: #10B981; }
+                .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+                .info-box { background: #f5f5f5; padding: 10px; border-radius: 5px; }
+                .label { font-size: 11px; color: #666; text-transform: uppercase; }
+                .value { font-weight: bold; }
+                .medications { margin: 20px 0; }
+                .med-item { padding: 10px; border-bottom: 1px solid #eee; }
+                .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #10B981; }
+                @media print { body { padding: 0; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="rx">Rx</div>
+                <h1>Ayush 24/7 Health Care</h1>
+                <p>E-Prescription</p>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-box">
+                    <div class="label">Patient</div>
+                    <div class="value">${pres.patient || pres.patientName}</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">Date</div>
+                    <div class="value">${pres.date}</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">Doctor</div>
+                    <div class="value">${pres.doctor}</div>
+                </div>
+                <div class="info-box">
+                    <div class="label">Prescription ID</div>
+                    <div class="value">${pres.id}</div>
+                </div>
+            </div>
+            
+            <div>
+                <div class="label">Diagnosis</div>
+                <p>${pres.diagnosis || 'N/A'}</p>
+            </div>
+            
+            <div class="medications">
+                <div class="label">Medications</div>
+                ${pres.medications.map((med, i) => `
+                    <div class="med-item">
+                        <strong>${i + 1}. ${med.name}</strong><br>
+                        Dosage: ${med.dosage} | Duration: ${med.duration || 'As directed'} | Qty: ${med.quantity || 'N/A'}
+                    </div>
+                `).join('')}
+            </div>
+            
+            ${pres.notes ? `<div><div class="label">Notes</div><p>${pres.notes}</p></div>` : ''}
+            
+            <div class="footer">
+                <p>Prescribed by: ${pres.doctor}</p>
+                <p style="font-size: 12px; color: #666;">This is a computer-generated prescription and is valid without signature.</p>
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
 }
 
 // Show medicine category
@@ -1246,42 +1646,128 @@ function placeOrder() {
     loadOrders();
 }
 
-// Load orders
+// Load orders from shared storage
 function loadOrders() {
-    const orders = JSON.parse(localStorage.getItem('patientOrders')) || getSampleOrders();
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const patientEmail = currentUser ? currentUser.email : '';
+    const patientName = currentUser ? currentUser.name : '';
+    
+    // Load from shared storage (orders created from prescriptions)
+    let allOrders = JSON.parse(localStorage.getItem('ayushOrders')) || [];
+    
+    // Filter orders for current patient
+    let orders = allOrders.filter(order => {
+        return order.patientEmail === patientEmail || 
+               order.patientName === patientName;
+    });
+    
+    // If no real orders, show sample data
+    if (orders.length === 0) {
+        orders = getSampleOrders();
+    }
     
     const ordersList = document.getElementById('ordersTrackList');
     
-    ordersList.innerHTML = orders.map(order => `
-        <div class="order-track-card">
-            <div class="order-header">
-                <h4>Order #${order.id}</h4>
-                <span class="status-badge ${order.status}">${order.status}</span>
+    if (orders.length === 0) {
+        ordersList.innerHTML = `
+            <div style="text-align: center; padding: 40px; background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 15px;">
+                <i class="fas fa-shopping-bag" style="font-size: 50px; color: #D97706; margin-bottom: 15px;"></i>
+                <h3 style="color: #92400E;">No Orders Yet</h3>
+                <p style="color: #B45309;">Order medicines from your prescriptions or browse our pharmacy.</p>
+                <button onclick="showDashboardSection('prescriptions')" style="margin-top: 15px; background: #D97706; color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer;">
+                    <i class="fas fa-file-prescription"></i> View Prescriptions
+                </button>
             </div>
-            <div class="order-details">
-                <p><i class="fas fa-calendar"></i> Ordered on: ${order.date}</p>
-                <p><i class="fas fa-truck"></i> ${order.deliveryDate}</p>
-                <p><i class="fas fa-rupee-sign"></i> Total: ₹${order.total}</p>
-            </div>
-            <div class="order-items">
-                <strong>Items:</strong>
-                <ul>
-                    ${order.items.map(item => `<li>${item.name} x ${item.quantity}</li>`).join('')}
-                </ul>
-            </div>
-            ${order.status === 'shipped' ? `
-                <div class="track-status">
-                    <div class="track-step completed"><i class="fas fa-check"></i> Order Placed</div>
-                    <div class="track-step completed"><i class="fas fa-check"></i> Confirmed</div>
-                    <div class="track-step active"><i class="fas fa-truck"></i> Shipped</div>
-                    <div class="track-step"><i class="fas fa-home"></i> Delivered</div>
+        `;
+        return;
+    }
+    
+    // Status configurations
+    const statusConfig = {
+        'pending': { bg: '#FEF3C7', text: '#D97706', icon: 'fa-clock', label: 'Order Placed' },
+        'confirmed': { bg: '#DBEAFE', text: '#2563EB', icon: 'fa-check-circle', label: 'Confirmed' },
+        'processing': { bg: '#E0E7FF', text: '#4338CA', icon: 'fa-cog fa-spin', label: 'Preparing' },
+        'shipped': { bg: '#D1FAE5', text: '#059669', icon: 'fa-truck', label: 'Out for Delivery' },
+        'delivered': { bg: '#ECFDF5', text: '#047857', icon: 'fa-check-double', label: 'Delivered' }
+    };
+    
+    const statusSteps = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
+    
+    ordersList.innerHTML = orders.map(order => {
+        const status = order.status || 'pending';
+        const style = statusConfig[status] || statusConfig['pending'];
+        const currentStepIndex = statusSteps.indexOf(status);
+        
+        // Generate items list
+        const itemsList = order.medications ? 
+            order.medications.map(med => `<li>${med.name} × ${med.quantity || 1}</li>`).join('') :
+            (order.items && Array.isArray(order.items) ? 
+                order.items.map(item => typeof item === 'object' ? `<li>${item.name} × ${item.quantity}</li>` : `<li>${item}</li>`).join('') :
+                `<li>${order.items} items</li>`);
+        
+        return `
+        <div class="order-track-card" style="border-left: 4px solid ${style.text}; margin-bottom: 20px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); overflow: hidden;">
+            <div class="order-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: linear-gradient(135deg, ${style.bg}, white);">
+                <div>
+                    <h4 style="margin: 0; color: #0F172A;">Order #${order.id}</h4>
+                    <p style="margin: 5px 0 0; color: #64748B; font-size: 14px;"><i class="fas fa-calendar-alt"></i> ${order.date}</p>
                 </div>
-            ` : ''}
+                <span style="background: ${style.bg}; color: ${style.text}; padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: 600;">
+                    <i class="fas ${style.icon}"></i> ${style.label}
+                </span>
+            </div>
+            
+            <div style="padding: 20px;">
+                ${order.doctor ? `<p style="color: #64748B; margin-bottom: 15px;"><i class="fas fa-user-md"></i> Prescribed by: <strong>${order.doctor}</strong></p>` : ''}
+                
+                <div class="order-items" style="background: #F8FAFC; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                    <strong style="color: #10B981;"><i class="fas fa-pills"></i> Items:</strong>
+                    <ul style="margin: 10px 0 0 20px; color: #0F172A;">
+                        ${itemsList}
+                    </ul>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 18px; font-weight: 600; color: #0F172A;">
+                        <i class="fas fa-rupee-sign" style="color: #10B981;"></i> Total: ₹${order.total}
+                    </div>
+                </div>
+                
+                <!-- Order Tracking Timeline -->
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #E2E8F0;">
+                    <p style="font-weight: 600; color: #64748B; margin-bottom: 15px;"><i class="fas fa-route"></i> Order Tracking</p>
+                    <div style="display: flex; justify-content: space-between; position: relative;">
+                        <div style="position: absolute; top: 15px; left: 20px; right: 20px; height: 3px; background: #E2E8F0; z-index: 0;"></div>
+                        <div style="position: absolute; top: 15px; left: 20px; height: 3px; background: #10B981; z-index: 1; width: ${(currentStepIndex / (statusSteps.length - 1)) * 100}%;"></div>
+                        ${statusSteps.map((step, idx) => `
+                            <div style="display: flex; flex-direction: column; align-items: center; z-index: 2;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: ${idx <= currentStepIndex ? '#10B981' : '#E2E8F0'}; color: ${idx <= currentStepIndex ? 'white' : '#94A3B8'}; font-size: 12px;">
+                                    ${idx <= currentStepIndex ? '<i class="fas fa-check"></i>' : idx + 1}
+                                </div>
+                                <span style="font-size: 10px; color: ${idx <= currentStepIndex ? '#10B981' : '#94A3B8'}; margin-top: 5px; text-align: center; max-width: 60px;">${statusConfig[step].label}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+            
+            <div style="padding: 15px 20px; background: #F8FAFC; display: flex; gap: 10px;">
+                <button onclick="viewOrderDetails('${order.id}')" style="flex: 1; background: #10B981; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                    <i class="fas fa-eye"></i> View Details
+                </button>
+                ${status === 'delivered' ? `
+                    <button onclick="reorderMedicines('${order.id}')" style="flex: 1; background: #3B82F6; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                        <i class="fas fa-redo"></i> Reorder
+                    </button>
+                ` : ''}
+            </div>
         </div>
-    `).join('');
+    `}).join('');
 
     const pendingOrders = orders.filter(o => o.status !== 'delivered').length;
-    document.getElementById('pendingOrders').textContent = pendingOrders;
+    if (document.getElementById('pendingOrders')) {
+        document.getElementById('pendingOrders').textContent = pendingOrders;
+    }
 }
 
 // Get sample orders
@@ -1289,16 +1775,54 @@ function getSampleOrders() {
     return [
         {
             id: 'ORD123456',
-            items: [
-                { name: 'Paracetamol 500mg', quantity: 2 },
-                { name: 'Vitamin D3 1000IU', quantity: 1 }
+            medications: [
+                { name: 'Paracetamol 500mg', quantity: 15 },
+                { name: 'Vitamin D3 1000IU', quantity: 30 }
             ],
             total: 370,
             status: 'shipped',
-            date: '2025-01-16',
-            deliveryDate: 'Arriving by Jan 19, 2025'
+            date: '2025-02-20',
+            doctor: 'Dr. Rajesh Kumar'
         }
     ];
+}
+
+// View order details
+function viewOrderDetails(orderId) {
+    const orders = JSON.parse(localStorage.getItem('ayushOrders')) || getSampleOrders();
+    const order = orders.find(o => o.id === orderId);
+    
+    if (!order) {
+        showToast('Order not found', 'error');
+        return;
+    }
+    
+    showToast(`Order ${orderId}: ${order.status.toUpperCase()} - Total: ₹${order.total}`, 'info');
+}
+
+// Reorder medicines
+function reorderMedicines(orderId) {
+    const orders = JSON.parse(localStorage.getItem('ayushOrders')) || [];
+    const prevOrder = orders.find(o => o.id === orderId);
+    
+    if (!prevOrder) {
+        showToast('Order not found', 'error');
+        return;
+    }
+    
+    const newOrder = {
+        ...prevOrder,
+        id: 'ORD' + Date.now(),
+        date: new Date().toISOString().split('T')[0],
+        createdAt: new Date().toISOString(),
+        status: 'pending'
+    };
+    
+    orders.push(newOrder);
+    localStorage.setItem('ayushOrders', JSON.stringify(orders));
+    
+    showToast(`Reorder placed! Order ID: ${newOrder.id}`, 'success');
+    loadOrders();
 }
 
 // Load medical records

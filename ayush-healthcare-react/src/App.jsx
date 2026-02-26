@@ -32,7 +32,7 @@ const ProtectedRoute = ({ children }) => {
 
 // Dashboard Router - renders correct dashboard based on role
 const DashboardRouter = () => {
-  const { role } = window.location.pathname.split('/').filter(Boolean)[1] || 'patient';
+  const role = window.location.pathname.split('/').filter(Boolean)[1] || 'patient';
   
   const dashboards = {
     patient: <PatientDashboard />,
